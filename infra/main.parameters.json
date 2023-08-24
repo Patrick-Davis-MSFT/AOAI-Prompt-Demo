@@ -7,6 +7,24 @@
       },
       "location": {
         "value": "${AZURE_LOCATION}"
+      },
+      "principalId": {
+        "value": "${AZURE_PRINCIPAL_ID}"
+      },
+      "openAiServiceName": {
+        "value": "${AZURE_OPENAI_SERVICE}"
+      },
+      "openAiResourceGroupName": {
+        "value": "${AZURE_OPENAI_RESOURCE_GROUP}"
+      },
+      "storageAccountName": {
+        "value": "${AZURE_STORAGE_ACCOUNT}"
+      },
+      "chatGptDeploymentName": {
+        "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat}"
+      },
+      "gptDeploymentName": {
+        "value": "${AZURE_OPENAI_GPT_DEPLOYMENT=davinci}"
       }
     }
 }
