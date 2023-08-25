@@ -5,7 +5,25 @@
 # To learn more about the azure.yaml file, visit https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/azd-schema
 
 # Name of the application.
-name: azd-starter
+name: azure-chuncking-demo
+services:
+  feapp:
+    project: ./app-code/backend
+    language: py
+    host: appservice
+    hooks:
+      prepackage:
+        windows:
+          shell: pwsh
+          run: cd ../frontend;npm install;npm run build
+          interactive: true
+          continueOnError: false
+        posix:
+          shell: sh
+          run:  cd ../frontend;npm install;npm run build
+          interactive: true
+          continueOnError: false
+
 # services:
 #   ## An example for a python API service.
 #   ## The service is named 'python-api'.

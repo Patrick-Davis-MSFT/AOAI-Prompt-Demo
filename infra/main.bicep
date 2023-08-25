@@ -186,9 +186,9 @@ module backend 'components/host/appservice.bicep' = {
   name: 'web'
   scope: rg
   params: {
-    name: !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}-ui-${resourceToken}'
+    name: !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}ui-${resourceToken}'
     location: location
-    tags: union(tags, { 'azd-service-name': 'app' })
+    tags: union(tags, { 'azd-service-name': 'feapp' })
     appServicePlanId: appServicePlan.outputs.id
     runtimeName: 'python'
     runtimeVersion: '3.10'
