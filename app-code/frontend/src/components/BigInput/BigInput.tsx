@@ -25,8 +25,8 @@ export const BigInput = ({ disabled, placeholder, defaultText, onChange, areaLab
 
 
     return (
-        <Stack horizontal className={styles.questionInputContainer}>
-            <Field label={areaLabel || "Text Entry"} className={styles.questionInputTextArea}>
+        <Stack horizontal className={styles.inputContainer}>
+            <Field label={areaLabel || "Text Entry"} className={styles.inputTextArea}>
                 <Textarea
                     placeholder={placeholder}
                     value={question}
