@@ -4,6 +4,7 @@ import mimetypes
 import time
 import logging
 import openai
+import sys
 from flask import Flask, request, jsonify, send_file, abort
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
@@ -11,6 +12,7 @@ from approaches.retrievethenread import RetrieveThenReadApproach
 from approaches.readretrieveread import ReadRetrieveReadApproach
 from approaches.readdecomposeask import ReadDecomposeAsk
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
+from approaches.summary import summary
 from azure.storage.blob import BlobServiceClient
 
 # Replace these with your own values, either in environment variables or directly here
@@ -74,6 +76,10 @@ chat_approaches = {
                                         AZURE_OPENAI_EMB_DEPLOYMENT,
                                         KB_FIELDS_SOURCEPAGE, 
                                         KB_FIELDS_CONTENT)
+}
+
+summarize_approaches = {
+    "sum": summary(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
 app = Flask(__name__)
@@ -160,6 +166,27 @@ def upload():
     except Exception as e:
         logging.exception("Exception in /upload")
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/summary", methods=["POST"])
+def summaryApi():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+
+
+    sys.stdout.write("got request\n")
+    sys.stdout.flush()
+    approach = request.json["approach"]
+    impl = summarize_approaches.get(approach)
+    sum = summary
+    r = sum.run()
+    sys.stdout.write("got request\n")
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+
+    return jsonify({"answer": "got response"}), 200
+
 
 def ensure_openai_token():
     global openai_token
