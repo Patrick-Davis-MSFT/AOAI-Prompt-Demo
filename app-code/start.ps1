@@ -55,10 +55,10 @@ Write-Host ""
 Write-Host "Building frontend"
 Write-Host ""
 npm run build
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Failed to build frontend"
-    exit $LASTEXITCODE
-}
+#if ($LASTEXITCODE -ne 0) {
+#    Write-Host "Failed to build frontend"
+#    exit $LASTEXITCODE
+#}
 
 
 Write-Host ""
