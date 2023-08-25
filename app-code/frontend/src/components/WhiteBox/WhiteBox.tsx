@@ -5,7 +5,7 @@ export interface WhiteBoxProps {
 }
 export class WhiteBoxModel {
     //View settings
-    static useWhiteBox: boolean = true;
+    static useWhiteBox: boolean = false;
 
     //Page View Overrides
     static showDevSettings: boolean = true;
@@ -15,6 +15,7 @@ export class WhiteBoxModel {
     static menuRightTitle: string = "Azure Open AI Sandbox";
     
     //Summary View Overrides
+    static showSummaryPrompt: boolean = true;
     static summaryTitle: string = "Summary Text Page";
     static sumPromptlbl: string = "Summary Prompt Label";
     static txtEntrylbl: string = "Text Entry Label";

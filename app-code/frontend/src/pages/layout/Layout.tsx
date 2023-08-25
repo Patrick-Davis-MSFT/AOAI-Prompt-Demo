@@ -22,8 +22,8 @@ const Layout = () => {
         setFileIndexList(newFileIndexList);
     };*/
 
-    var leftTitle = "GPT + Enterprise data | Sample";
-    var rightTitle = "Azure OpenAI + Cognitive Search";
+    var leftTitle = "GPT Summarize | Sample";
+    var rightTitle = "Azure OpenAI";
     if (WhiteBoxModel.useWhiteBox) {
         leftTitle = WhiteBoxModel.menuLeftTitle;
         rightTitle = WhiteBoxModel.menuRightTitle;
@@ -41,17 +41,17 @@ const Layout = () => {
                             {WhiteBoxModel.showQuestion || !WhiteBoxModel.useWhiteBox ?
                                 (<><li>
                                     <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        Chat
+                                        Summarize
                                     </NavLink>
                                 </li>
                                     <li className={styles.headerNavLeftMargin}>
-                                        <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                            Ask a question
+                                        <NavLink to="/fs" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                            File Summarize
                                         </NavLink>
                                     </li></>) : <></>}
                             {WhiteBoxModel.showGitHub || !WhiteBoxModel.useWhiteBox ?
                                 <li className={styles.headerNavLeftMargin}>
-                                    <a href="https://aka.ms/entgptsearch" target={"_blank"} title="Github repository link">
+                                    <a href="https://github.com/Patrick-Davis-MSFT/AOAI-Document-Sumerazation" target={"_blank"} title="Github repository link">
                                         <img
                                             src={github}
                                             alt="Github logo"

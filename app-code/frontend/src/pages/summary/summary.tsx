@@ -86,13 +86,14 @@ const Summary = () => {
             <div className={styles.sumContainer}>
             {WhiteBoxModel.hideChatLogo ? <></>: chatLogo()}
                 <h1>{summaryTitle}</h1>
-                <BigInput
+                {!WhiteBoxModel.showSummaryPrompt && WhiteBoxModel.useWhiteBox ? <></> :  <BigInput
                     disabled={false}
                     placeholder={sumPromptlbl}
                     areaLabel={sumPromptlbl}
                     defaultText={summaryPrompt}
                     onChange={onSummaryPromptChange}
-                />
+                />}
+               
                 <BigInput
                     disabled={false}
                     placeholder={txtEntrylbl}
