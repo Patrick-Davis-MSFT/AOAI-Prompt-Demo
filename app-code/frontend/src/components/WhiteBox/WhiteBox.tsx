@@ -5,21 +5,24 @@ export interface WhiteBoxProps {
 }
 export class WhiteBoxModel {
     //View settings
-    static useWhiteBox: boolean = false;
+    static useWhiteBox: boolean = true;
 
     //Page View Overrides
-    static showDevSettings: boolean = false;
-    static showGitHub: boolean = false;
-    static showQuestion: boolean = false;
-    static menuLeftTitle: string = "Menu Left Title";
-    static menuRightTitle: string = "Menu Right Title";
-    static chatPageTitle: string = "Chat Page Title";
-    static chatPageSubTitle: string = "Chat Page Subtitle";
-    static questPageTitle: string = "Question Page Subtitle";
+    static showDevSettings: boolean = true;
+    static showGitHub: boolean = true;
+    static showQuestion: boolean = true;
+    static menuLeftTitle: string = "Summarize Example";
+    static menuRightTitle: string = "Azure Open AI Sandbox";
+    
+    //Summary View Overrides
+    static summaryTitle: string = "Summary Title";
+    static sumPromptlbl: string = "Summary Prompt Label";
+    static txtEntrylbl: string = "Text Entry Label";
+    static summaryPromptTXT: string = "Explain the song below in your own words for a child.";
+    static sumTextTXT: string = "Bumping up and down in my little red wagon\nBumping up and down in my little red wagon\nBumping up and down in my little red wagon\nWon’t you be my darling?\n\nOne wheel’s off and the axle’s broken\nOne wheel’s off and the axle’s broken\nOne wheel’s off and the axle’s broken\nWon’t you be my darling?\n\nFreddy’s gonna fix it with his hammer\nFreddy’s gonna fix it with his hammer\nFreddy’s gonna fix it with his hammer\nWon’t you be my darling?\n\nBumping up and down in my little red wagon\nBumping up and down in my little red wagon\nBumping up and down in my little red wagon\nWon’t you be my darling?";
 
-    static chatPrompt: string = "What is your prompt for the entry box?";
-    static questPrompt: string = "What is your prompt for the entry box?";
     static chatLogoOverride: boolean = true;
+    static hideChatLogo: boolean = false;
     static chatLogo = () => {
         return (
             <img src={logo} height={"50px"} style={{ marginBottom: 20 + 'px' }} alt="Microsoft Logo" />

@@ -1,40 +1,66 @@
 import { DefaultButton, Panel, SpinButton, TextField } from "@fluentui/react";
 import { SummaryOpts, callSummary } from "../../api";
-import { Tooltip } from "@fluentui/react-components";
+import { Field, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 
 import styles from "./summary.module.css";
 import { SettingsButton } from "../../components/SettingsButton";
-import { useState } from "react";
+import { BigInput } from "../../components/BigInput";
+import { ChangeEvent, useState } from "react";
+import { sizeBoolean } from "@fluentui/react/lib/index.bundle";
+import { SparkleFilled } from "@fluentui/react-icons";
+import { WhiteBoxModel } from "../../components/WhiteBox/WhiteBox";
 
 const Summary = () => {
+
+    //section for White Boxing Text 
+    var summaryTitle: string = "Summarize Text";
+    var sumPromptlbl: string = "Summarization Prompt";
+    var txtEntrylbl: string = "Text to Summarize";
+    var summaryPromptTXT: string = "Below is an extract from the annual financial report of a company. Extract key financial number (if present), key internal risk factors, and key external risk factors.";
+    var sumTextTXT: string = "Revenue increased $7.5 billion or 16%. Commercial products and cloud services revenue increased $4.0 billion or 13%. O365 Commercial revenue grew 22% driven by seat growth of 17% and higher revenue per user. Office Consumer products and cloud services revenue increased $474 million or 10% driven by Consumer subscription revenue, on a strong prior year comparable that benefited from transactional strength in Japan. Gross margin increased $6.5 billion or 18% driven by the change in estimated useful lives of our server and network equipment. \nOur competitors range in size from diversified global companies with significant research and development resources to small, specialized firms whose narrower product lines may let them be more effective in deploying technical, marketing, and financial resources. Barriers to entry in many of our businesses are low and many of the areas in which we compete evolve rapidly with changing and disruptive technologies, shifting user needs, and frequent introductions of new products and services. Our ability to remain competitive depends on our success in making innovative products, devices, and services that appeal to businesses and consumers.";
+    var chatLogo = () => {
+        return (<SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 225, 1)"} aria-hidden="true" aria-label="Chat logo" />);
+    }
+    if (WhiteBoxModel.useWhiteBox) {
+        summaryTitle = WhiteBoxModel.summaryTitle;
+        sumPromptlbl = WhiteBoxModel.sumPromptlbl;
+        txtEntrylbl = WhiteBoxModel.txtEntrylbl;
+        summaryPromptTXT = WhiteBoxModel.summaryPromptTXT;
+        sumTextTXT = WhiteBoxModel.sumTextTXT;
+        if (WhiteBoxModel.chatLogoOverride) {
+            chatLogo = WhiteBoxModel.chatLogo;
+        }
+    }
+
+
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [temperature, setTemperature] = useState<number>(3);
     const [top_p, setTop_p] = useState<number>(10);
     const [frequencyPenalty, setFrequencyPenalty] = useState<number>(0);
     const [presencePenalty, setPresencePenalty] = useState<number>(0);
-    const [summaryPrompt, setSummaryPrompt] = useState<string>("Below is an extract from the annual financial report of a company. Extract key financial number (if present), key internal risk factors, and key external risk factors.");
-    const [sumText, setSumText] = useState<string>("Revenue increased $7.5 billion or 16%. Commercial products and cloud services revenue increased $4.0 billion or 13%. O365 Commercial revenue grew 22% driven by seat growth of 17% and higher revenue per user. Office Consumer products and cloud services revenue increased $474 million or 10% driven by Consumer subscription revenue, on a strong prior year comparable that benefited from transactional strength in Japan. Gross margin increased $6.5 billion or 18% driven by the change in estimated useful lives of our server and network equipment. \nOur competitors range in size from diversified global companies with significant research and development resources to small, specialized firms whose narrower product lines may let them be more effective in deploying technical, marketing, and financial resources. Barriers to entry in many of our businesses are low and many of the areas in which we compete evolve rapidly with changing and disruptive technologies, shifting user needs, and frequent introductions of new products and services. Our ability to remain competitive depends on our success in making innovative products, devices, and services that appeal to businesses and consumers.");
+    const [summaryPrompt, setSummaryPrompt] = useState<string>(summaryPromptTXT);
+    const [sumText, setSumText] = useState<string>(sumTextTXT);
 
     const makeSummaryRequest = async () => {
         //remember to divide the number by 10 for Temperature
-        const sumOpts:SummaryOpts = { 
+        const sumOpts: SummaryOpts = {
             sumText: sumText,
             temperature: temperature / 10,
             top_p: top_p / 10,
             frequency_penalty: frequencyPenalty / 10,
             presence_penalty: presencePenalty / 10,
-           summaryPrompt: summaryPrompt  
+            summaryPrompt: summaryPrompt
         };
         const response = await callSummary(sumOpts);
         const data = await response;
         console.log(data);
     }
 
-    const onSummaryPromptChange = (_ev?: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-        setSummaryPrompt(newValue || "");
+    const onSummaryPromptChange = (ev: ChangeEvent<HTMLTextAreaElement>, newValue: TextareaOnChangeData) => {
+        setSummaryPrompt(newValue.value || "");
     };
-    const onSumTextChange = (_ev?: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-        setSumText(newValue || "");
+    const onSumTextChange = (ev: ChangeEvent<HTMLTextAreaElement>, newValue: TextareaOnChangeData) => {
+        setSumText(newValue.value || "");
     };
 
     const onTemperatureChange = (_ev?: React.SyntheticEvent<HTMLElement, Event>, newValue?: string) => {
@@ -58,23 +84,20 @@ const Summary = () => {
         </div>
         <div className={styles.sumRoot}>
             <div className={styles.sumContainer}>
-                <h1>summary controls</h1>
-
-                <TextField
-                    className={styles.chatSettingsSeparator}
-                    defaultValue={summaryPrompt}
-                    label="Summary Prompt"
-                    multiline
-                    autoAdjustHeight
+            {WhiteBoxModel.hideChatLogo ? <></>: chatLogo()}
+                <h1>{summaryTitle}</h1>
+                <BigInput
+                    disabled={false}
+                    placeholder={sumPromptlbl}
+                    areaLabel={sumPromptlbl}
+                    defaultText={summaryPrompt}
                     onChange={onSummaryPromptChange}
                 />
-
-                <TextField
-                    className={styles.chatSettingsSeparator}
-                    defaultValue={sumText}
-                    label="Text to Summarize"
-                    multiline
-                    autoAdjustHeight
+                <BigInput
+                    disabled={false}
+                    placeholder={txtEntrylbl}
+                    areaLabel={txtEntrylbl}
+                    defaultText={sumText}
                     onChange={onSumTextChange}
                 />
                 <DefaultButton onClick={makeSummaryRequest}>Make Summary Request</DefaultButton>
