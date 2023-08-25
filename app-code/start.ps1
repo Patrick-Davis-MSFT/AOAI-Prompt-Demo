@@ -60,12 +60,14 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
+
 Write-Host ""
 Write-Host "Starting frontend"
 Write-Host ""
-Set-Location ../backend
-Start-Process http://127.0.0.1:5000
+Start-Process npm -ArgumentList "run dev"
+Start-Process http://localhost:5173/
 
+Set-Location ../backend
 Start-Process -FilePath $venvPythonPath -ArgumentList "-m flask run --port=5000 --reload --debug" -Wait -NoNewWindow
 
 if ($LASTEXITCODE -ne 0) {

@@ -12,7 +12,7 @@ from approaches.retrievethenread import RetrieveThenReadApproach
 from approaches.readretrieveread import ReadRetrieveReadApproach
 from approaches.readdecomposeask import ReadDecomposeAsk
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
-from approaches.summary import summary
+from approaches.summaryFullText import summaryFullText
 from azure.storage.blob import BlobServiceClient
 
 # Replace these with your own values, either in environment variables or directly here
@@ -78,8 +78,8 @@ chat_approaches = {
                                         KB_FIELDS_CONTENT)
 }
 
-summarize_approaches = {
-    "sum": summary(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+summarize_full_text_approaches = {
+    "sft": summaryFullText(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
 app = Flask(__name__)
@@ -157,7 +157,7 @@ def upload():
     ensure_openai_token()
     try:
         fName = request.json["name"]
-        file = request.json["file"]
+        file = request.json["textSum"]
         
         if not file:
             return jsonify({"error": "no file"}), 400
@@ -174,18 +174,12 @@ def summaryApi():
     if not request.json:
         return jsonify({"error": "request must be json"}), 400
 
-
-    sys.stdout.write("got request\n")
-    sys.stdout.flush()
     approach = request.json["approach"]
-    impl = summarize_approaches.get(approach)
-    sum = summary
-    r = sum.run()
-    sys.stdout.write("got request\n")
-    sys.stdout.write("\n")
-    sys.stdout.flush()
-
-    return jsonify({"answer": "got response"}), 200
+    impl = summarize_full_text_approaches.get(approach)
+    prompt=request.json["summaryPrompt"]
+    fullText=request.json["textSum"]
+    r = impl.run(prompt, fullText)
+    return jsonify(r), 200
 
 
 def ensure_openai_token():
