@@ -11,3 +11,4 @@ export type SummaryResponse = {
     answer: string;
 };
 export type Indexes = Index[];
+

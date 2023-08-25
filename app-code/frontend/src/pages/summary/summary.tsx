@@ -42,12 +42,9 @@ const Summary = () => {
                         className={styles.chatSettingsSeparator}
                         defaultValue={promptTemplate}
                         label="Override prompt template"
-                        multiline
                         autoAdjustHeight
                         onChange={onPromptTemplateChange}
                     />
-
-                  
                 </Panel>
             </div>
         </div>
