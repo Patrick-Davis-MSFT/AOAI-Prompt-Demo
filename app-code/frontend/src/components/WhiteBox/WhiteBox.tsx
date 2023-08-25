@@ -15,7 +15,7 @@ export class WhiteBoxModel {
     static menuRightTitle: string = "Azure Open AI Sandbox";
     
     //Summary View Overrides
-    static summaryTitle: string = "Summary Title";
+    static summaryTitle: string = "Summary Text Page";
     static sumPromptlbl: string = "Summary Prompt Label";
     static txtEntrylbl: string = "Text Entry Label";
     static summaryPromptTXT: string = "Explain the song below in your own words for a child.";
