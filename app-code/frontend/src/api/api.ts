@@ -10,6 +10,10 @@ export async function callSummary(options: SummaryOpts): Promise<SummaryResponse
         body: JSON.stringify({
             summaryPrompt: options.summaryPrompt,
             sumText: options.sumText,
+            temperature: options.temperature,
+            top_p: options.top_p,
+            frequency_penalty: options.frequency_penalty,
+            presence_penalty: options.presence_penalty,
             approach: "sft", //options.approach,
         }),
     });
