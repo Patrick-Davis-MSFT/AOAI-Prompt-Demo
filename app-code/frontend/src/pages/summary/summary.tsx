@@ -1,5 +1,5 @@
 import { DefaultButton, Panel, SpinButton, TextField } from "@fluentui/react";
-import { callSummary } from "../../api";
+import { SummaryOpts, callSummary } from "../../api";
 import { Tooltip } from "@fluentui/react-components";
 
 import styles from "./summary.module.css";
@@ -8,22 +8,33 @@ import { useState } from "react";
 
 const Summary = () => {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
-    const [promptTemplate, setPromptTemplate] = useState<string>("");
     const [temperature, setTemperature] = useState<number>(3);
     const [top_p, setTop_p] = useState<number>(10);
     const [frequencyPenalty, setFrequencyPenalty] = useState<number>(0);
     const [presencePenalty, setPresencePenalty] = useState<number>(0);
+    const [summaryPrompt, setSummaryPrompt] = useState<string>("Below is an extract from the annual financial report of a company. Extract key financial number (if present), key internal risk factors, and key external risk factors.");
+    const [sumText, setSumText] = useState<string>("Revenue increased $7.5 billion or 16%. Commercial products and cloud services revenue increased $4.0 billion or 13%. O365 Commercial revenue grew 22% driven by seat growth of 17% and higher revenue per user. Office Consumer products and cloud services revenue increased $474 million or 10% driven by Consumer subscription revenue, on a strong prior year comparable that benefited from transactional strength in Japan. Gross margin increased $6.5 billion or 18% driven by the change in estimated useful lives of our server and network equipment. \nOur competitors range in size from diversified global companies with significant research and development resources to small, specialized firms whose narrower product lines may let them be more effective in deploying technical, marketing, and financial resources. Barriers to entry in many of our businesses are low and many of the areas in which we compete evolve rapidly with changing and disruptive technologies, shifting user needs, and frequent introductions of new products and services. Our ability to remain competitive depends on our success in making innovative products, devices, and services that appeal to businesses and consumers.");
 
     const makeSummaryRequest = async () => {
         //remember to divide the number by 10 for Temperature
-        //const sumOpts:SummaryOpts = { filename: "somefile", summaryPrompt: "someprompt" };
-        const response = await callSummary();
+        const sumOpts:SummaryOpts = { 
+            sumText: sumText,
+            temperature: temperature / 10,
+            top_p: top_p / 10,
+            frequency_penalty: frequencyPenalty / 10,
+            presence_penalty: presencePenalty / 10,
+           summaryPrompt: summaryPrompt  
+        };
+        const response = await callSummary(sumOpts);
         const data = await response;
         console.log(data);
     }
 
-    const onPromptTemplateChange = (_ev?: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-        setPromptTemplate(newValue || "");
+    const onSummaryPromptChange = (_ev?: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+        setSummaryPrompt(newValue || "");
+    };
+    const onSumTextChange = (_ev?: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+        setSumText(newValue || "");
     };
 
     const onTemperatureChange = (_ev?: React.SyntheticEvent<HTMLElement, Event>, newValue?: string) => {
@@ -51,20 +62,20 @@ const Summary = () => {
 
                 <TextField
                     className={styles.chatSettingsSeparator}
-                    defaultValue={promptTemplate}
+                    defaultValue={summaryPrompt}
                     label="Summary Prompt"
                     multiline
                     autoAdjustHeight
-                    onChange={onPromptTemplateChange}
+                    onChange={onSummaryPromptChange}
                 />
 
                 <TextField
                     className={styles.chatSettingsSeparator}
-                    defaultValue={promptTemplate}
+                    defaultValue={sumText}
                     label="Text to Summarize"
                     multiline
                     autoAdjustHeight
-                    onChange={onPromptTemplateChange}
+                    onChange={onSumTextChange}
                 />
                 <DefaultButton onClick={makeSummaryRequest}>Make Summary Request</DefaultButton>
                 <Panel

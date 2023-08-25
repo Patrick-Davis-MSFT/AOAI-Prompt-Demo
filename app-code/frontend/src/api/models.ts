@@ -1,6 +1,10 @@
 export type SummaryOpts = {
     summaryPrompt: string;
-    filename: string;
+    sumText: string;
+    temperature: number;
+    top_p: number;
+    frequency_penalty: number;
+    presence_penalty: number;
 }
 
 export type Index = {

@@ -177,7 +177,7 @@ def summaryApi():
     approach = request.json["approach"]
     impl = summarize_full_text_approaches.get(approach)
     prompt=request.json["summaryPrompt"]
-    fullText=request.json["textSum"]
+    fullText=request.json["sumText"]
     r = impl.run(prompt, fullText)
     return jsonify(r), 200
 
