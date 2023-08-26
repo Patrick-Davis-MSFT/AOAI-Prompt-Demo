@@ -1,7 +1,8 @@
+import { AOAIResult, aoaiChoices } from "../components/GenericAOAIResult";
 import { Indexes, SummaryOpts, SummaryResponse } from "./models";
 import { FileContent } from "use-file-picker";
 
-export async function callSummary(options: SummaryOpts): Promise<SummaryResponse> {
+export async function callSummary(options: SummaryOpts): Promise<AOAIResult> {
     const response = await fetch(`/summary`, {
         method: "POST",
         headers: {
@@ -15,10 +16,33 @@ export async function callSummary(options: SummaryOpts): Promise<SummaryResponse
             frequency_penalty: options.frequency_penalty,
             presence_penalty: options.presence_penalty,
             approach: "sft", //options.approach,
+            maxTokens: options.maxTokens,
         }),
     });
     const json = await response.json();
-    return json;
+
+    var retVal: AOAIResult = {
+        created: json.created,
+        id: json.id,
+        model: json.model,
+        object: json.object,
+        usage: {
+            completion_tokens: json.usage.completion_tokens,
+            prompt_tokens: json.usage.prompt_tokens,
+            total_tokens: json.usage.total_tokens
+        },
+        choices: new Array<aoaiChoices>()
+    };
+    json.choices.forEach((choice: any) => {
+        retVal.choices.push({
+            finish_reason: choice.finish_reason,
+            index: choice.index,
+            logprobs: choice.logprobs,
+            text: choice.text
+    });
+    });
+
+    return retVal;
 }
 
 export async function getIndexes(): Promise<Indexes> {

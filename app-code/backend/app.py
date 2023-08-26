@@ -175,6 +175,7 @@ def summaryApi():
         return jsonify({"error": "request must be json"}), 400
 
     approach = request.json["approach"]
+    maxTokens = request.json["maxTokens"]
     impl = summarize_full_text_approaches.get(approach)
     prompt=request.json["summaryPrompt"]
     fullText=request.json["sumText"]
@@ -182,7 +183,7 @@ def summaryApi():
     top_p=request.json["top_p"]
     frequency_penalty=request.json["frequency_penalty"]
     presence_penalty=request.json["presence_penalty"]
-    r = impl.run(prompt, fullText, temperature, top_p, frequency_penalty, presence_penalty)
+    r = impl.run(prompt, fullText, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
     return jsonify(r), 200
 
 

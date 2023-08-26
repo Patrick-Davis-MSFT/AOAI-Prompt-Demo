@@ -5,6 +5,7 @@ export type SummaryOpts = {
     top_p: number;
     frequency_penalty: number;
     presence_penalty: number;
+    maxTokens: number;
 }
 
 export type Index = {

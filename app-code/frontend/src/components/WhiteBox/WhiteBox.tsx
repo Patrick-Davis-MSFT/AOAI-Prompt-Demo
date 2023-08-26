@@ -6,6 +6,8 @@ export interface WhiteBoxProps {
 export class WhiteBoxModel {
     //View settings
     static useWhiteBox: boolean = false;
+    static maxTokensInit: number = 1500;
+    static maxTokensAllowed: number = 2500;
 
     //Page View Overrides
     static showDevSettings: boolean = true;

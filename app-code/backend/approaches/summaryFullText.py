@@ -9,10 +9,12 @@ class summaryFullText():
         
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
-        self.chatgpt_token_limit = get_token_limit(chatgpt_model)
+        self.chatgpt_token_limit = 5000 #get_token_limit(chatgpt_model)
 
-    def run(self, prompt:str, text:str, temperature:float, top_p:float, frequency_penalty:float, presence_penalty:float): 
+    def run(self, prompt:str, text:str, temperature:float, top_p:float, frequency_penalty:float, presence_penalty:float, maxTokens:int): 
         fullPrompt = prompt + "\n\n# Start of Report\n" + text + "\n# End of Report"
+        if maxTokens < 5000:
+            self.chatgpt_token_limit = maxTokens
         response = openai.Completion.create(
             deployment_id=self.chatgpt_deployment,
             model=self.chatgpt_model,
