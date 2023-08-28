@@ -50,7 +50,10 @@ const Summary = () => {
     const [aoaiResponse, setAOAIResponse] = useState<AOAIResult>({} as AOAIResult);
     const [gotResult, setGotResult] = useState<boolean>(false);
 
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
     const makeSummaryRequest = async () => {
+        setIsLoading(true);
         //remember to divide the number by 10 for Temperature
         const sumOpts: SummaryOpts = {
             sumText: sumText,
@@ -65,6 +68,7 @@ const Summary = () => {
         const data = await response;
         setAOAIResponse(data);
         setGotResult(true);
+        setIsLoading(false);
         console.log(data);
     }
 
@@ -117,7 +121,7 @@ const Summary = () => {
                     defaultText={sumText}
                     onChange={onSumTextChange}
                 />
-                <DefaultButton onClick={makeSummaryRequest}>Make Summary Request</DefaultButton>
+                <DefaultButton disabled={isLoading} onClick={makeSummaryRequest}>{isLoading? (<>Loading...</>) : (<>Make Summary Request</>)} </DefaultButton>
                 {gotResult? <GenericAOAIResult input={aoaiResponse} />: <></>}
                 <Panel
                     headerText="Configure answer generation"
