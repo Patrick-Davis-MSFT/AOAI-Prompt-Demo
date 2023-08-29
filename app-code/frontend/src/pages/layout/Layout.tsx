@@ -45,8 +45,8 @@ const Layout = () => {
                                     </NavLink>
                                 </li>
                                     <li className={styles.headerNavLeftMargin}>
-                                        <NavLink to="/fs" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                            File Summarize
+                                        <NavLink to="/ob" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                            Open Box
                                         </NavLink>
                                     </li></>) : <></>}
                             {WhiteBoxModel.showGitHub || !WhiteBoxModel.useWhiteBox ?

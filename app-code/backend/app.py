@@ -13,6 +13,7 @@ from approaches.readretrieveread import ReadRetrieveReadApproach
 from approaches.readdecomposeask import ReadDecomposeAsk
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from approaches.summaryFullText import summaryFullText
+from approaches.openBoxFullText import openBoxFullText
 from azure.storage.blob import BlobServiceClient
 
 # Replace these with your own values, either in environment variables or directly here
@@ -80,6 +81,10 @@ chat_approaches = {
 
 summarize_full_text_approaches = {
     "sft": summaryFullText(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+}
+
+openbox_full_text_approaches = {
+    "obt": openBoxFullText(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
 app = Flask(__name__)
@@ -184,6 +189,26 @@ def summaryApi():
     frequency_penalty=request.json["frequency_penalty"]
     presence_penalty=request.json["presence_penalty"]
     r = impl.run(prompt, fullText, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
+    return jsonify(r), 200
+
+
+@app.route("/openbox", methods=["POST"])
+def openboxApi():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+
+    approach = request.json["approach"]
+    maxTokens = request.json["maxTokens"]
+    impl = openbox_full_text_approaches.get(approach)
+    prompt=request.json["openBoxPrompt"]
+    temperature=request.json["temperature"]
+    top_p=request.json["top_p"]
+    frequency_penalty=request.json["frequency_penalty"]
+    presence_penalty=request.json["presence_penalty"]
+    r = impl.run(prompt, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
+    sys.stdout.write("openboxApi: " + str(r))
+    sys.stdout.flush()
     return jsonify(r), 200
 
 

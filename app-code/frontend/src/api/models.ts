@@ -8,6 +8,15 @@ export type SummaryOpts = {
     maxTokens: number;
 }
 
+export type OpenBoxOpts = {
+    openBoxPrompt: string;
+    temperature: number;
+    top_p: number;
+    frequency_penalty: number;
+    presence_penalty: number;
+    maxTokens: number;
+}
+
 export type Index = {
     id: string;
     name: string;

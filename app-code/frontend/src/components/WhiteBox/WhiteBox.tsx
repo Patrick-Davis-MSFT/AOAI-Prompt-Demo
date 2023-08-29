@@ -25,6 +25,12 @@ export class WhiteBoxModel {
     static sumTextTXT: string = "Bumping up and down in my little red wagon\nBumping up and down in my little red wagon\nBumping up and down in my little red wagon\nWon’t you be my darling?\n\nOne wheel’s off and the axle’s broken\nOne wheel’s off and the axle’s broken\nOne wheel’s off and the axle’s broken\nWon’t you be my darling?\n\nFreddy’s gonna fix it with his hammer\nFreddy’s gonna fix it with his hammer\nFreddy’s gonna fix it with his hammer\nWon’t you be my darling?\n\nBumping up and down in my little red wagon\nBumping up and down in my little red wagon\nBumping up and down in my little red wagon\nWon’t you be my darling?";
     static showTechnicalInfo: boolean = true;
 
+
+    //Open Box View Overrides
+    static openBoxTitle: string = "Open Box Trial";
+    static obPromptlbl: string = "Open Box Prompt";
+    static openBoxPromptTXT: string = "Tell me a joke.";
+
     static chatLogoOverride: boolean = true;
     static hideChatLogo: boolean = false;
     static chatLogo = () => {

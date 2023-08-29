@@ -13,20 +13,6 @@ interface Props {
 
 export const GenericAOAIResult = ({ input }: Props) => {
 
-    const [technicalInfo, setTechnicalInfo] = useState<string[]>([]);
-
-    useEffect(() => {
-        var tmpArray = new Array();
-        tmpArray.push("ID: " + input.id);
-        tmpArray.push("Model: " + input.model);
-        tmpArray.push("Object: " + input.object);
-        tmpArray.push("Completion (Output) Tokens: " + input.usage.completion_tokens);
-        tmpArray.push("Prompt Tokens: " + input.usage.prompt_tokens);
-        tmpArray.push("Total Tokens: " + input.usage.total_tokens);
-        setTechnicalInfo(tmpArray);
-    }, [technicalInfo, input.id]);
-
-
     const verticalGapStackTokens: IStackTokens = {
         childrenGap: 10,
         padding: 10,
@@ -65,7 +51,6 @@ export const GenericAOAIResult = ({ input }: Props) => {
         {WhiteBoxModel.useWhiteBox && !WhiteBoxModel.showTechnicalInfo || !WhiteBoxModel.useWhiteBox ? <></>: 
                     (<><h4>Technical Information</h4>
         <div>
-            <List items={technicalInfo} />
             <div><Text>ID: {input.id}</Text></div>
             <div><Text>Model: {input.model}</Text></div>
             <div><Text>Object: {input.object}</Text></div>
