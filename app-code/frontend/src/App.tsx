@@ -25,6 +25,10 @@ const router = createHashRouter([
                 lazy: () => import("./pages/openBox/OpenBox")
             },
             {
+                path: "dc",
+                lazy: () => import("./pages/textCompare/textCompare")
+            },
+            {
                 path: "*",
                 lazy: () => import("./pages/NoPage")
             }

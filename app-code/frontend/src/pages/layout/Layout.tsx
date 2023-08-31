@@ -44,11 +44,16 @@ const Layout = () => {
                                         Summarize
                                     </NavLink>
                                 </li>
-                                    <li className={styles.headerNavLeftMargin}>
+                                <li className={styles.headerNavLeftMargin}>
                                         <NavLink to="/ob" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                             Open Box
                                         </NavLink>
-                                    </li></>) : <></>}
+                                    </li>
+                                <li className={styles.headerNavLeftMargin}>
+                                    <NavLink to="/dc" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                        Text Compare
+                                    </NavLink>
+                                </li></>) : <></>}
                             {WhiteBoxModel.showGitHub || !WhiteBoxModel.useWhiteBox ?
                                 <li className={styles.headerNavLeftMargin}>
                                     <a href="https://github.com/Patrick-Davis-MSFT/AOAI-Document-Sumerazation" target={"_blank"} title="Github repository link">
