@@ -17,6 +17,17 @@ export type OpenBoxOpts = {
     maxTokens: number;
 }
 
+export type OpenBoxCompareOpts = {
+    openBox1Prompt: string;
+    openBox2Prompt: string;
+    openBox3Prompt: string;
+    temperature: number;
+    top_p: number;
+    frequency_penalty: number;
+    presence_penalty: number;
+    maxTokens: number;
+}
+
 export type Index = {
     id: string;
     name: string;

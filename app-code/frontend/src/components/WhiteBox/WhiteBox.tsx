@@ -34,11 +34,18 @@ export class WhiteBoxModel {
     
     //Open Box View Overrides
     static textCompareTitle: string = "Open Box Trial";
-    static tcPromptlbl: string = "Open Box Prompt";
-    static tcPromptTXT: string = "Tell me a joke.";
     static box1Title: string = "Box 1 Title";
+    static box1Caption: string = "Box 1 Caption";
+    static box1Text: string = "Box 1 Text";
+    static box1lbl: string = "Box 1 Label";
     static box2Title: string = "Box 2 Title";
+    static box2Caption: string = "Box 2 Caption";
+    static box2Text: string = "Box 2 Text";
+    static box2lbl: string = "Box 2 Label";
     static box3Title: string = "Box 3 Title";
+    static box3Caption: string = "Box 3 Caption";
+    static box3Text: string = "Box 3 Text";
+    static box3lbl: string = "Box 3 Label";
 
     static chatLogoOverride: boolean = true;
     static hideChatLogo: boolean = false;

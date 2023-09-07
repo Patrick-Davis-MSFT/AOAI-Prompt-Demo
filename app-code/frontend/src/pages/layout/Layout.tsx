@@ -49,9 +49,14 @@ const Layout = () => {
                                             Open Box
                                         </NavLink>
                                     </li>
-                                <li className={styles.headerNavLeftMargin}>
+                                    <li className={styles.headerNavLeftMargin}>
                                     <NavLink to="/dc" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                         Text Compare
+                                    </NavLink>
+                                </li>
+                                <li className={styles.headerNavLeftMargin}>
+                                    <NavLink to="/fc" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                        File Compare
                                     </NavLink>
                                 </li></>) : <></>}
                             {WhiteBoxModel.showGitHub || !WhiteBoxModel.useWhiteBox ?

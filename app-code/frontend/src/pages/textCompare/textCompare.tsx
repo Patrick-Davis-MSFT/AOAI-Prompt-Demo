@@ -1,5 +1,5 @@
 import { DefaultButton, DefaultPalette, IStackItemStyles, IStackStyles, IStackTokens, Panel, SpinButton, Stack } from "@fluentui/react";
-import { OpenBoxOpts, callOpenBox } from "../../api";
+import { OpenBoxCompareOpts, OpenBoxOpts, callOpenBox, callOpenCompareBox } from "../../api";
 import { TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 
 import styles from "./textCompare.module.css";
@@ -8,6 +8,7 @@ import { BigInput } from "../../components/BigInput";
 import { ChangeEvent, useState } from "react";
 import { sizeBoolean } from "@fluentui/react/lib/index.bundle";
 import { SparkleFilled } from "@fluentui/react-icons";
+import { Text } from "@fluentui/react";
 import { WhiteBoxModel } from "../../components/WhiteBox/WhiteBox";
 import { AOAIResult, GenericAOAIResult } from "../../components/GenericAOAIResult";
 
@@ -16,10 +17,18 @@ export function Component(): JSX.Element {
     //section for White Boxing Text 
     var textCompareTitle: string = "Text Compare";
     var tcPromptlbl: string = "Text Compare Prompt";
-    var box1Title: string = "First Text";
-    var box2Title: string = "Second Text";
-    var box3Title: string = "Third Text";
-    var tcPromptTXT: string = "Write a product launch email for new AI-powered headphones that are priced at $79.99 and available at Best Buy, Target and Amazon.com. The target audience is tech-savvy music lovers and the tone is friendly and exciting.\n\n    1. What should be the subject line of the email?  \n    2. What should be the body of the email?";
+    var box1Title: string = "Resume";
+    var box1Caption: string = "Refer to this as {Document 1}";
+    var box1Text: string = "I throw rocks very good.";
+    var box1lbl: string = "Resume Text";
+    var box2Title: string = "Comparison Prompt";
+    var box2Caption: string = "Enter Comparison Text Here";
+    var box2Text: string = "How does the resume in {Document 1} compare to the job description in {Document 2}?";
+    var box2lbl: string = "Prompt";
+    var box3Title: string = "Job Description";
+    var box3Caption: string = "Refer to this as {Document 2}";
+    var box3Text: string = "This job requires someone who throws rocks.";
+    var box3lbl: string = "Job Description Text";
     var maxTokensInit: number = 2000;
     var maxTokensAllowed: number = 4500;
     var chatLogo = () => {
@@ -27,11 +36,18 @@ export function Component(): JSX.Element {
     }
     if (WhiteBoxModel.useWhiteBox) {
         textCompareTitle = WhiteBoxModel.textCompareTitle;
-        tcPromptlbl = WhiteBoxModel.tcPromptlbl;
-        tcPromptTXT = WhiteBoxModel.tcPromptTXT;
         box1Title = WhiteBoxModel.box1Title;
+        box1Caption = WhiteBoxModel.box1Caption;
+        box1Text = WhiteBoxModel.box1Text;
+        box1lbl = WhiteBoxModel.box1lbl;
         box2Title = WhiteBoxModel.box2Title;
+        box2Caption = WhiteBoxModel.box2Caption;
+        box2Text = WhiteBoxModel.box2Text;  
+        box2lbl = WhiteBoxModel.box2lbl;
         box3Title = WhiteBoxModel.box3Title;
+        box3Caption = WhiteBoxModel.box3Caption;
+        box3Text = WhiteBoxModel.box3Text;
+        box3lbl = WhiteBoxModel.box3lbl;
         maxTokensInit = WhiteBoxModel.maxTokensInit;
         maxTokensAllowed = WhiteBoxModel.maxTokensAllowed;
         if (WhiteBoxModel.chatLogoOverride) {
@@ -46,7 +62,9 @@ export function Component(): JSX.Element {
     const [frequencyPenalty, setFrequencyPenalty] = useState<number>(0);
     const [presencePenalty, setPresencePenalty] = useState<number>(0);
     const [maxTokens, setMaxTokens] = useState<number>(maxTokensInit);
-    const [openBoxPrompt, setOpenBoxPrompt] = useState<string>(tcPromptTXT);
+    const [openBox1Prompt, setOpenBox1Prompt] = useState<string>(box1Text);
+    const [openBox2Prompt, setOpenBox2Prompt] = useState<string>(box2Text);
+    const [openBox3Prompt, setOpenBox3Prompt] = useState<string>(box3Text);
     
     const [aoaiResponse, setAOAIResponse] = useState<AOAIResult>({} as AOAIResult);
     const [gotResult, setGotResult] = useState<boolean>(false);
@@ -57,15 +75,17 @@ export function Component(): JSX.Element {
     const makeSummaryRequest = async () => {
         setIsLoading(true);
         //remember to divide the number by 10 for Temperature
-        const openBoxOpts: OpenBoxOpts = {
-            openBoxPrompt: openBoxPrompt,
+        const openBoxCompareOpts: OpenBoxCompareOpts = {
+            openBox1Prompt: openBox1Prompt,
+            openBox2Prompt: openBox2Prompt,
+            openBox3Prompt: openBox3Prompt,
             temperature: temperature / 10,
             top_p: top_p / 10,
             frequency_penalty: frequencyPenalty / 10,
             presence_penalty: presencePenalty / 10,
             maxTokens: maxTokens
         };
-        const response = await callOpenBox(openBoxOpts);
+        const response = await callOpenCompareBox(openBoxCompareOpts);
         const data = await response;
         setAOAIResponse(data);
         setGotResult(true);
@@ -73,8 +93,14 @@ export function Component(): JSX.Element {
         console.log(data);
     }
 
-    const onOpenBoxPromptChange = (ev: ChangeEvent<HTMLTextAreaElement>, newValue: TextareaOnChangeData) => {
-        setOpenBoxPrompt(newValue.value || "");
+    const onOpenBox1PromptChange = (ev: ChangeEvent<HTMLTextAreaElement>, newValue: TextareaOnChangeData) => {
+        setOpenBox1Prompt(newValue.value || "");
+    };
+    const onOpenBox2PromptChange = (ev: ChangeEvent<HTMLTextAreaElement>, newValue: TextareaOnChangeData) => {
+        setOpenBox2Prompt(newValue.value || "");
+    };
+    const onOpenBox3PromptChange = (ev: ChangeEvent<HTMLTextAreaElement>, newValue: TextareaOnChangeData) => {
+        setOpenBox3Prompt(newValue.value || "");
     };
 
     const onTemperatureChange = (_ev?: React.SyntheticEvent<HTMLElement, Event>, newValue?: string) => {
@@ -123,35 +149,38 @@ export function Component(): JSX.Element {
             <Stack.Item grow styles={stackItemStyles}>
                 <Stack enableScopedSelectors>
                 <h2>{box1Title}</h2>
+                <Text variant="small" >{box1Caption}</Text>
                 <BigInput
                     disabled={false}
-                    placeholder={tcPromptlbl}
-                    areaLabel={tcPromptlbl}
-                    defaultText={openBoxPrompt}
-                    onChange={onOpenBoxPromptChange}
+                    placeholder={box1lbl}
+                    areaLabel={box1lbl}
+                    defaultText={openBox1Prompt}
+                    onChange={onOpenBox1PromptChange}
                 /></Stack>
                 </Stack.Item>
                 <Stack.Item grow={2}  styles={stackItemStyles}>
                     
                 <Stack enableScopedSelectors>
                 <h2>{box2Title}</h2>
+                <Text variant="small" >{box2Caption}</Text>
                 <BigInput
                     disabled={false}
-                    placeholder={tcPromptlbl}
-                    areaLabel={tcPromptlbl}
-                    defaultText={openBoxPrompt}
-                    onChange={onOpenBoxPromptChange}
+                    placeholder={box2lbl}
+                    areaLabel={box2lbl}
+                    defaultText={openBox2Prompt}
+                    onChange={onOpenBox2PromptChange}
                 /></Stack>
                 </Stack.Item>
                 <Stack.Item grow={3}  styles={stackItemStyles}>
                 <Stack enableScopedSelectors>
                 <h2>{box3Title}</h2>
+                <Text variant="small" >{box3Caption}</Text>
                 <BigInput
                     disabled={false}
-                    placeholder={tcPromptlbl}
-                    areaLabel={tcPromptlbl}
-                    defaultText={openBoxPrompt}
-                    onChange={onOpenBoxPromptChange}
+                    placeholder={box3lbl}
+                    areaLabel={box3lbl}
+                    defaultText={openBox3Prompt}
+                    onChange={onOpenBox3PromptChange}
                 />
                 </Stack>
                 </Stack.Item>
