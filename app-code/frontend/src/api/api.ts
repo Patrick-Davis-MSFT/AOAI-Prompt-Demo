@@ -59,7 +59,7 @@ export async function callOpenCompareBox(options: OpenBoxCompareOpts): Promise<A
             top_p: options.top_p,
             frequency_penalty: options.frequency_penalty,
             presence_penalty: options.presence_penalty,
-            approach: "obt", //options.approach,
+            approach: "ctb", //options.approach,
             maxTokens: options.maxTokens,
         }),
     });

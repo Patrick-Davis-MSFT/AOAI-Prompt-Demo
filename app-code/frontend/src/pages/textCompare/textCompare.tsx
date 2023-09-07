@@ -19,7 +19,7 @@ export function Component(): JSX.Element {
     var tcPromptlbl: string = "Text Compare Prompt";
     var box1Title: string = "Resume";
     var box1Caption: string = "Refer to this as {Document 1}";
-    var box1Text: string = "I throw rocks very good.";
+    var box1Text: string = "I throw rocks very good.\n\nI have a lot of experience in throwing rocks at things. ";
     var box1lbl: string = "Resume Text";
     var box2Title: string = "Comparison Prompt";
     var box2Caption: string = "Enter Comparison Text Here";
@@ -27,7 +27,7 @@ export function Component(): JSX.Element {
     var box2lbl: string = "Prompt";
     var box3Title: string = "Job Description";
     var box3Caption: string = "Refer to this as {Document 2}";
-    var box3Text: string = "This job requires someone who throws rocks.";
+    var box3Text: string = "This job requires someone who throws rocks at things.";
     var box3lbl: string = "Job Description Text";
     var maxTokensInit: number = 2000;
     var maxTokensAllowed: number = 4500;

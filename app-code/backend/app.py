@@ -14,6 +14,7 @@ from approaches.readdecomposeask import ReadDecomposeAsk
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from approaches.summaryFullText import summaryFullText
 from approaches.openBoxFullText import openBoxFullText
+from approaches.textCompare import textCompare
 from azure.storage.blob import BlobServiceClient
 
 # Replace these with your own values, either in environment variables or directly here
@@ -85,6 +86,10 @@ summarize_full_text_approaches = {
 
 openbox_full_text_approaches = {
     "obt": openBoxFullText(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+}
+
+text_compare_approaches = {
+    "ctb": textCompare(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
 app = Flask(__name__)
@@ -211,6 +216,27 @@ def openboxApi():
     sys.stdout.flush()
     return jsonify(r), 200
 
+@app.route("/openboxcompare", methods=["POST"])
+def textCompareApi():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+
+    approach = request.json["approach"]
+    maxTokens = request.json["maxTokens"]
+    impl = text_compare_approaches.get(approach)
+    promptBox2=request.json["openBox2Prompt"]
+    box1=request.json["openBox1Prompt"]
+    box3=request.json["openBox3Prompt"]
+
+    temperature=request.json["temperature"]
+    top_p=request.json["top_p"]
+    frequency_penalty=request.json["frequency_penalty"]
+    presence_penalty=request.json["presence_penalty"]
+    r = impl.run(promptBox2,box1,box3, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
+    sys.stdout.write("openboxApi: " + str(r))
+    sys.stdout.flush()
+    return jsonify(r), 200
 
 def ensure_openai_token():
     global openai_token
