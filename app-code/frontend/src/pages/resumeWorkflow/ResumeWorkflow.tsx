@@ -1,14 +1,14 @@
-import { ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, Modal, Overlay, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles } from "@fluentui/react";
-import { OpenBoxOpts, callClearData, callOpenBox } from "../../api";
+import { Text, ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, List, Modal, Overlay, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles, CommandButton } from "@fluentui/react";
+import { OpenBoxOpts, ReadyFile, callClearData, callOpenBox, getReadyFiles, indexReadyFiles, removeStagedFile, streamToBlob, uploadBlob } from "../../api";
 import { TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { useId, useBoolean } from '@fluentui/react-hooks';
 
 import styles from "./ResumeWorkflow.module.css";
 import { SettingsButton } from "../../components/SettingsButton";
 import { BigInput } from "../../components/BigInput";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { sizeBoolean } from "@fluentui/react/lib/index.bundle";
-import { SparkleFilled } from "@fluentui/react-icons";
+import { Delete24Regular, Document24Regular, SparkleFilled } from "@fluentui/react-icons";
 import { WhiteBoxModel } from "../../components/WhiteBox/WhiteBox";
 import { AOAIResult, GenericAOAIResult } from "../../components/GenericAOAIResult";
 import React from "react";
@@ -104,8 +104,15 @@ export function Component(): JSX.Element {
     const [keepInBounds, { toggle: toggleKeepInBounds }] = useBoolean(false);
     const [overlayText, setOverlayText] = useState('Overlay is Here');
     const titleId = useId('howitworks');
-
     const confirmTitleId = useId('confirm');
+    const [error, setError] = useState<string | null>(null);
+    const [uploadIndexDisabled, setUploadIndexDisabled] = useState<boolean>(false); //disable index button
+    useEffect(() => {
+        const run = async () => {
+            await setReadyFileList();
+        }
+        run();
+    }, []);
 
     const dragOptions = React.useMemo(
         (): IDragOptions => ({
@@ -121,14 +128,15 @@ export function Component(): JSX.Element {
     const cancelIcon: IIconProps = { iconName: 'Cancel' };
 
     const resetData = () => {
-        const callReset = async() => {
-            try{
-            await callClearData();
-            toggleIsOverlayVisible();
+        const callReset = async () => {
+            try {
+                await callClearData();
+                toggleIsOverlayVisible();
+                setReadyFileList();
             }
-            catch(e: any){
+            catch (e: any) {
                 console.log(e);
-                setOverlayText("Error in callReset(): " + e.message)
+                setOverlayText("Error in callReset(): " + e.message);
             }
         }
         setOverlayText("Clearing Data...");
@@ -136,6 +144,92 @@ export function Component(): JSX.Element {
         callReset();
         hideModalConfirm();
     }
+
+    const [file, setFile] = useState<File | null>(null);
+    const [fileUploading, setFileUploading] = useState<boolean>(false);
+
+    const [uploadedFileList, setUploadedFileList] = useState<ReadyFile[]>([]);
+    const setReadyFileList = async () => {
+        const fileIdx = await getReadyFiles();
+        setUploadedFileList(fileIdx);
+        return true;
+    };
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        if (!file) return;
+
+        setOverlayText("Uploading" + file.name + "...");
+        toggleIsOverlayVisible();
+        try {
+            setFileUploading(true);
+            console.log("loading: " + file.name);
+            const blob = await streamToBlob(file.stream());
+            await uploadBlob(blob, file.name);
+            console.log("done: " + file.name);
+            await setReadyFileList();
+            setFile(null);
+            toggleIsOverlayVisible();
+        }
+        catch (error: any) {
+            console.log(error);
+            setError("Error in Upload: " + error.message);
+            setOverlayText("Error in Upload: " + error.message);
+
+        }
+        setFileUploading(false);
+    }
+
+    const removeItem = (name: string) => {
+        setOverlayText("Removing " + name + "...");
+        toggleIsOverlayVisible();
+        setUploadIndexDisabled(true);
+        const removeStagedItem = async (name: string) => {
+            const result = await removeStagedFile(name);
+            console.log(result);
+            await setReadyFileList();
+            setUploadIndexDisabled(false);
+            toggleIsOverlayVisible();
+        }
+        removeStagedItem(name);
+    }
+
+    const callIndexFiles = async () => {
+        try {
+            const retValue = await indexReadyFiles();
+            console.log(retValue);
+            await setReadyFileList();
+        }
+        catch (error: any) {
+            console.log(error);
+            alert(`An error occurred: ${error.message}`);
+            setError(error.message);
+            setOverlayText("Indexing Error: " + error.message);
+        }
+        setError(null);
+        setUploadIndexDisabled(false);
+        toggleIsOverlayVisible();
+    };
+    const indexFilesPress = () => {
+
+        setOverlayText("Indexing Files...");
+        toggleIsOverlayVisible();
+        setUploadIndexDisabled(true);
+        return callIndexFiles();
+    };
+
+    const onRenderCellFiles = (item?: ReadyFile, index?: number | undefined): JSX.Element | null => {
+        if (!item) return null;
+        console.log(item);
+        return (<>
+            <div className={styles.fileOptContainer}>
+                <span className={styles.fileOption}><Document24Regular />
+                    <Text variant="large">{item.name}</Text>
+                    <CommandButton onClick={() => removeItem(item.name)}><Delete24Regular />
+                    </CommandButton>
+                </span>
+            </div>
+        </>);
+    };
 
     return (<div className={styles.container}>
         <div className={styles.commandsContainer}>
@@ -168,10 +262,29 @@ export function Component(): JSX.Element {
                     <DefaultButton className={styles.warningButton} onClick={showModalConfirm} >Clear Existing Data</DefaultButton>
                 </Stack.Item>
                 <Stack.Item align="start">
-                    <h2>Upload Button</h2>
+                    {fileUploading ? <h3>File Uploading... Please Wait</h3> : <>
+                        <h3>File Upload</h3>
+                        <form onSubmit={handleSubmit}>
+                            <input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                            />
+                            <button type="submit" disabled={!file}>
+                                Upload
+                            </button>
+                        </form></>}
                 </Stack.Item>
                 <Stack.Item align="start">
-                    <h2>Index Button</h2>
+                    <h3>Ready for Indexing</h3>
+                    <DefaultButton
+                        className={styles.buttonSpace}
+                        onClick={() => indexFilesPress()}
+                        disabled={uploadIndexDisabled || uploadedFileList.length === 0}>
+                        Upload Index
+                    </DefaultButton>
+                    <List items={uploadedFileList} onRenderCell={onRenderCellFiles} />
+                    {error ? <Text variant="large" style={{ color: "red" }}>{error}</Text> : null}
                 </Stack.Item>
             </Stack>
         </Stack>
@@ -191,7 +304,7 @@ export function Component(): JSX.Element {
 
                     {isOverlayVisible && (
                         <Overlay className={mergeStyles(styles.overlay)}>
-                                                 <Stack enableScopedSelectors>
+                            <Stack enableScopedSelectors>
                                 <Stack.Item align="center" className={styles.overlayContent}>
                                     <div >{overlayText}</div>
                                 </Stack.Item>

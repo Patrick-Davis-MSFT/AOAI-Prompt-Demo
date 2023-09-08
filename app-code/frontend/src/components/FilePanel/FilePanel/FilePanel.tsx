@@ -5,7 +5,7 @@ import { useFilePicker, FileContent, FileError } from 'use-file-picker';
 
 import styles from "./FilePanel.module.css";
 import { useEffect, useState } from "react";
-import { Index, Indexes, getIndexes, postFile } from "../../../api";
+import { Index, Indexes, getIndexes } from "../../../api";
 import { Document24Regular } from "@fluentui/react-icons";
 
 interface Props {
@@ -32,7 +32,7 @@ export const FilePanel = ({ className, show, close, setIndex }: Props) => {
 
     const UploadFile = () => {
         const run = async (f: FileContent) => {
-            const sentFile = await postFile(f);
+            //TODO FIX THISconst sentFile = await postFile(f);
             return true;
         };
         uploadList.forEach((f) => {

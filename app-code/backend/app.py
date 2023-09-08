@@ -169,15 +169,62 @@ def indexes():
 def upload():
     ensure_openai_token()
     try:
-        fName = request.json["name"]
-        file = request.json["textSum"]
-        
-        if not file:
-            return jsonify({"error": "no file"}), 400
-        #some Azure Upload
-        return fName
+
+        sys.stdout.write("Upload Started")
+        sys.stdout.write("starting file \n")
+        sys.stdout.flush()
+        file = request.files['file']
+        sys.stdout.write("file \n" + str(file.name))
+        sys.stdout.flush()
+        # Connect to Azure Storage
+        blob_service_client = BlobServiceClient(account_url=f"https://" + AZURE_STORAGE_ACCOUNT + ".blob.core.windows.net", credential=azure_credential)
+        container_client = blob_service_client.get_container_client(AZURE_STG_RESUME_CONTAINER)
+
+        # Upload the file to Azure Storage
+        blob_client = container_client.get_blob_client(file.filename)
+        blob_client.upload_blob(file, overwrite=True)
+        #with file as data:
+        #    container_client.upload_blob(file.name, data, overwrite=True)
+
+        sys.stdout.write("End \n")
+        sys.stdout.flush()
+        return jsonify({"result":"File uploaded to Azure Storage!"})
     except Exception as e:
         logging.exception("Exception in /upload")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/readyFiles", methods=["GET"])
+def readyFiles():
+    ensure_openai_token()
+    try: 
+        blob_service_client = BlobServiceClient(account_url=f"https://" + AZURE_STORAGE_ACCOUNT + ".blob.core.windows.net", credential=azure_credential)
+        container_client = blob_service_client.get_container_client(AZURE_STG_RESUME_CONTAINER) 
+        blobs = container_client.list_blobs()
+
+        files = [] 
+        for blob in blobs:
+            files.append({
+                "size": blob.size, 
+                "name": blob.name
+                })
+        return jsonify(files)
+    except Exception as e:
+        logging.exception("Exception in /readyFiles")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/removeStagedFile", methods=["POST"])
+def removeStaged():
+    
+    ensure_openai_token()
+    try:
+        file = request.json["fileName"]
+        blob_service_client = BlobServiceClient(account_url=f"https://" + AZURE_STORAGE_ACCOUNT + ".blob.core.windows.net", credential=azure_credential)
+        container_client = blob_service_client.get_container_client(AZURE_STG_RESUME_CONTAINER) 
+        container_client.delete_blob(file)
+        return jsonify({"result":"File removed from Azure Storage!"})
+    except Exception as e:
+        logging.exception("Exception in /removeStagedFile")
         return jsonify({"error": str(e)}), 500
 
 

@@ -37,3 +37,12 @@ export type SummaryResponse = {
 };
 export type Indexes = Index[];
 
+
+
+export type ReadyFile = {
+    size: string;
+    name: string;
+}
+
+
+export type ReadyFiles = ReadyFile[];

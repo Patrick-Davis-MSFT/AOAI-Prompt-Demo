@@ -1,5 +1,5 @@
 import { AOAIResult, aoaiChoices } from "../components/GenericAOAIResult";
-import { Indexes, OpenBoxCompareOpts, OpenBoxOpts, SummaryOpts, SummaryResponse } from "./models";
+import { Indexes, OpenBoxCompareOpts, OpenBoxOpts, ReadyFiles, SummaryOpts, SummaryResponse } from "./models";
 import { FileContent } from "use-file-picker";
 
 export async function callSummary(options: SummaryOpts): Promise<AOAIResult> {
@@ -160,22 +160,65 @@ export async function getIndexes(): Promise<Indexes> {
     return parsedResponse;
 }
 
-export async function postFile(inFile: FileContent): Promise<string> {
-    const response = await fetch("/upload", {
+export async function streamToBlob(readableStream: ReadableStream): Promise<Blob> {
+    const reader = readableStream.getReader();
+    const chunks = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+    return new Blob(chunks, { type: "application/octet-stream" });
+  }
+
+export  async function uploadBlob(blob: Blob, fName: string): Promise<void> {
+    const formData = new FormData();
+    formData.append("file", blob, fName);
+    await fetch("/upload", {
+      method: "POST",
+      body: formData,
+    });
+  }
+
+  export async function getReadyFiles(): Promise<ReadyFiles> {
+    console.log("Getting ready files");
+    const response = await fetch("/readyFiles", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const parsedResponse: ReadyFiles = await response.json();
+    if (response.status > 299 || !response.ok) {
+        throw Error("Getting Indexes: Unknown error");
+    }
+
+    return parsedResponse;
+}
+export async function removeStagedFile(fileName: string): Promise<void> {
+    const response = await fetch("/removeStagedFile", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-            file: inFile.content,
-            name: inFile.name
-        })
+        body: JSON.stringify({"fileName": fileName})
+    });
+    return response.json();
+}
+
+export async function indexReadyFiles(): Promise<String> {
+    const response = await fetch("/indexUploadedFiles", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }
     });
 
-    const parsedResponse: string = await response.json();
+    const parsedResponse = await response;
     if (response.status > 299 || !response.ok) {
-        throw Error("Uploading File: Unknown error");
+        throw Error("Indexing files: Unknown error");
     }
 
-    return parsedResponse;
+    return parsedResponse.text();
 }
