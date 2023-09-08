@@ -5,7 +5,7 @@ This demonstration allows for a web based playground of Azure Open AI to demonst
 - Open Box Connected Directly to Azure Open AI
 - Text Summarization
 - Text Comparison 
-- Resume Search Workflow
+- Resume Search Workflow (*under construction*)
     > This workflow is not intended to replace or replicate HR needs or other more complex systems. Instead show a window into how Azure Open AI can be used for human like text analysis. 
 
 > **AZURE RESOURCE COSTS** by default this sample will create Azure App Service and Azure Cognitive Search resources that have a monthly cost, as well as Form Recognizer resource that has cost per document page. You can switch them to free versions of each of them if you want to avoid this cost by changing the parameters file under the infra folder (though there are some limits to consider; for example, you can have up to 1 free Cognitive Search resource per subscription, and the free Form Recognizer resource only analyzes the first 2 pages of each document.)
@@ -21,15 +21,23 @@ To install this on an azure cloud you will need the following
 1. Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner). 
 
 
-### Local Prerequisites
+### Prerequisites
+The demo can be installed from
+* Github Codespace
+* Docker Container
+* Azure Cloud Shell
+* A Local Development Machine
+
+> To control the resource group that the demo deploys to run `azd env set AZURE_RESOURCE_GROUP {Name of the target resource group}` after running `azd init`. Otherwise the target resource group will be `rg-{enviroment-name}`
 
 ### Installing from Cloud Environments
-To develop upon this repo in the cloud you can use these links. Merge request are required to check in. 
+
+To use a preconfigured VM image choose one of the below options.
 
 [![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://github.com/codespaces/new?hide_repo_select=false&ref=main&repo=682644932&machine=standardLinux32gb&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=WestUs2)
 [![Open in Remote - Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/Patrick-Davis-MSFT/AOAI-Document-Sumerazation)
 
-> You may need to give execute authority to the `./scripts` folder with the containers and the cloud accounts
+> You may need to give execute authority to the `./scripts` folder with the containers and the cloud accounts or if running from a linux machine.
 
 To install from these cloud development environments open a terminal window 
 1. Run `azd auth login` and follow the instructions. 
@@ -78,7 +86,8 @@ To install from the Azure Cloud Shell
 
 
 ## Other Helpful commands
-> <b>Note</b>: all `azd` commands assume that the user has run `azd auth login` first
+> <b>Note</b>: all `azd` commands assume that the user has run both `azd auth login` and the `azd init -t {repo}` first
+> - `azd init` only needs to be run once when first setting up the environment
 
 To run the code locally:
 1. Clone this repository to your local environment.
