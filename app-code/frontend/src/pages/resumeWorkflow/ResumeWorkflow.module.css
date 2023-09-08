@@ -1,0 +1,90 @@
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.sumRoot {
+    flex: 1;
+    display: flex;
+}
+
+.sumContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.headerStack{
+    margin: 5px;
+}
+
+.contentStack{
+    width: 100%;
+}
+
+.headerSpan{
+    align-items: center;
+}
+
+.headerItem{
+    width: 100%;
+}
+.settingsSeparator {
+    margin-top: 15px;
+}
+
+.loadingLogo {
+    font-size: 28px;
+}
+
+.commandsContainer {
+    display: flex;
+    align-self: flex-end;
+}
+
+.commandButton {
+    margin-right: 20px;
+    margin-bottom: 20px;
+}
+
+.modalContainer {
+    display: 'flex';
+    flex-flow: 'column nowrap';
+    align-items: 'stretch';
+  }
+.modalHeader {flex: '1 1 auto';
+    border-top: 4px solid black;
+    color: whitesmoke;
+    display: 'flex';
+    float:left;
+    width: 100%;
+    align-items: 'center';
+    font-weight: semibold;
+    padding: '12px 12px 14px 24px';
+    font-size: x-large;
+}
+.modalHeading {
+    color: black;
+        font-weight: semibold;
+        font-size: 'inherit';
+        margin: 15px;
+}
+.modalBody {
+    flex: '4 4 auto';
+      padding: '24px 24px 24px 24px';
+      overflow-y: 'hidden';
+      margin: 15px;
+}
+.modalBody > p {
+    margin: '14px 0' ;
+}
+.modalBody >p:first-child {
+    margin-top: 0;
+}
+.modalBody >p:last-child {
+    margin-bottom: 0;
+}

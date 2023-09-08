@@ -55,8 +55,8 @@ const Layout = () => {
                                     </NavLink>
                                 </li>
                                 <li className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/fc" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        File Compare
+                                    <NavLink to="/rwf" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                        Resume Workflow
                                     </NavLink>
                                 </li></>) : <></>}
                             {WhiteBoxModel.showGitHub || !WhiteBoxModel.useWhiteBox ?

@@ -29,6 +29,10 @@ const router = createHashRouter([
                 lazy: () => import("./pages/textCompare/textCompare")
             },
             {
+                path: "rwf",
+                lazy: () => import("./pages/resumeWorkflow/ResumeWorkflow")
+            },
+            {
                 path: "*",
                 lazy: () => import("./pages/NoPage")
             }
