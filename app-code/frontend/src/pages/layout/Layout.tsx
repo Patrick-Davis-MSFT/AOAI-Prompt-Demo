@@ -61,7 +61,7 @@ const Layout = () => {
                                 </li></>) : <></>}
                             {WhiteBoxModel.showGitHub || !WhiteBoxModel.useWhiteBox ?
                                 <li className={styles.headerNavLeftMargin}>
-                                    <a href="https://github.com/Patrick-Davis-MSFT/AOAI-Document-Sumerazation" target={"_blank"} title="Github repository link">
+                                    <a href="https://github.com/Patrick-Davis-MSFT/AOAI-Prompt-Demo" target={"_blank"} title="Github repository link">
                                         <img
                                             src={github}
                                             alt="Github logo"

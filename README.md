@@ -35,13 +35,13 @@ The demo can be installed from
 To use a preconfigured VM image choose one of the below options.
 
 [![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://github.com/codespaces/new?hide_repo_select=false&ref=main&repo=682644932&machine=standardLinux32gb&devcontainer_path=.devcontainer%2Fdevcontainer.json&location=WestUs2)
-[![Open in Remote - Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/Patrick-Davis-MSFT/AOAI-Document-Sumerazation)
+[![Open in Remote - Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/Patrick-Davis-MSFT/AOAI-Prompt-Demo)
 
 > You may need to give execute authority to the `./scripts` folder with the containers and the cloud accounts or if running from a linux machine.
 
 To install from these cloud development environments open a terminal window 
 1. Run `azd auth login` and follow the instructions. 
-1. Run `azd init -t Patrick-Davis-MSFT/AOAI-Document-Sumerazation`
+1. Run `azd init -t Patrick-Davis-MSFT/AOAI-Prompt-Demo`
 1. Add the `AZURE_OPENAI_RESOURCE_GROUP` and `AZURE_OPENAI_SERVICE` to the `.azure/{enviroment-name}/.env` file 
     * `azd env set AZURE_OPENAI_SERVICE {Name of existing OpenAI service}`
     * `azd env set AZURE_OPENAI_RESOURCE_GROUP {Name of existing resource group that OpenAI service is provisioned to}`
@@ -52,7 +52,7 @@ To install from these cloud development environments open a terminal window
 To install from the Azure Cloud Shell
 1. Create a new directory for the deployment
 1. You will need to login using `azd auth login` to run the python scripts 
-1. `azd init -t Patrick-Davis-MSFT/AOAI-Document-Sumerazation` Note: This will not link the downloaded solution to the git repo
+1. `azd init -t Patrick-Davis-MSFT/AOAI-Prompt-Demo` Note: This will not link the downloaded solution to the git repo
 1. Choose to overwrite the files if no if you cloned and/or made changes locally 
 1. Add the `AZURE_OPENAI_RESOURCE_GROUP` and `AZURE_OPENAI_SERVICE` to the `.azure/{enviroment-name}/.env` file 
     * `azd env set AZURE_OPENAI_SERVICE {Name of existing OpenAI service}`
@@ -75,7 +75,7 @@ To install from the Azure Cloud Shell
 ### Initialize the Project Locally 
 1. Create a new folder and switch to it in the terminal
 1. Run `azd auth login`
-1. Run `azd init -t Patrick-Davis-MSFT/AOAI-Document-Sumerazation`
+1. Run `azd init -t Patrick-Davis-MSFT/AOAI-Prompt-Demo`
     * note that this command will download this repository but will not initialize git to track local changes
 1. Add the `AZURE_OPENAI_RESOURCE_GROUP` and `AZURE_OPENAI_SERVICE` to the `.azure/{enviroment-name}/.env` file by running the following 
     * `azd env set AZURE_OPENAI_SERVICE {Name of existing OpenAI service}`
@@ -105,3 +105,14 @@ To test packaging of any changes
 1. Run the command `azd package`
 
 
+#### Sharing Environments
+
+To give someone else access to a completely deployed and existing environment,
+either you or they can follow these steps:
+
+1. Install the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
+1. Run `azd init -t Patrick-Davis-MSFT/AOAI-Prompt-Demos` or clone this repository.
+1. Run `azd env refresh -e {environment name}`
+   They will need the azd environment name, subscription ID, and location to run this command. You can find those values in your `.azure/{env name}/.env` file.  This will populate their azd environment's `.env` file with all the settings needed to run the app locally.
+1. Set the environment variable `AZURE_PRINCIPAL_ID` either in that `.env` file or in the active shell to their Azure ID, which they can get with `az account show`.
+1. Run `./scripts/roles.ps1` or `.scripts/roles.sh` to assign all of the necessary roles to the user.  If they do not have the necessary permission to create roles in the subscription, then you may need to run this script for them. Once the script runs, they should be able to run the app locally.
