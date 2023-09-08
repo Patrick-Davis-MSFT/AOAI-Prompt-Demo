@@ -16,6 +16,7 @@ from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from approaches.summaryFullText import summaryFullText
 from approaches.openBoxFullText import openBoxFullText
 from approaches.textCompare import textCompare
+from approaches.indexResumeFiles import indexResumeFiles
 from azure.storage.blob import BlobServiceClient
 
 # Replace these with your own values, either in environment variables or directly here
@@ -30,6 +31,8 @@ AZURE_OPENAI_CHATGPT_MODEL = os.environ.get("AZURE_OPENAI_CHATGPT_MODEL") or "gp
 AZURE_OPENAI_EMB_DEPLOYMENT = os.environ.get("AZURE_OPENAI_EMB_DEPLOYMENT") or "embedding"
 AZURE_STG_RESUME_CONTAINER = os.environ.get("AZURE_STG_RESUME_CONTAINER") or "stage-resumes"
 AZURE_IDX_RESUME_CONTAINER = os.environ.get("AZURE_IDX_RESUME_CONTAINER") or "indexed-resumes"
+AZURE_FORMRECOGNIZER_SERVICE = os.environ.get("AZURE_FORMRECOGNIZER_SERVICE") or "myformrecognizer"
+AZURE_FORMRECOGNIZER_KEY = os.environ.get("AZURE_FORMRECOGNIZER_KEY") or "myformrecognizerkey"
 
 KB_FIELDS_CONTENT = os.environ.get("KB_FIELDS_CONTENT") or "content"
 KB_FIELDS_CATEGORY = os.environ.get("KB_FIELDS_CATEGORY") or "category"
@@ -93,6 +96,10 @@ openbox_full_text_approaches = {
 
 text_compare_approaches = {
     "ctb": textCompare(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+}
+
+indexResumeFiles_approaches = {
+    "irf": indexResumeFiles(AZURE_STG_RESUME_CONTAINER, AZURE_IDX_RESUME_CONTAINER, AZURE_FORMRECOGNIZER_SERVICE, AZURE_FORMRECOGNIZER_KEY, AZURE_SEARCH_SERVICE, AZURE_SEARCH_INDEX, AZURE_OPENAI_EMB_DEPLOYMENT, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_SERVICE)
 }
 
 app = Flask(__name__)
@@ -294,7 +301,6 @@ def clearData():
     if not request.json:
         return jsonify({"error": "request must be json"}), 400
     
-    print(f"here")
     blob_service_client = BlobServiceClient(account_url=f"https://" + AZURE_STORAGE_ACCOUNT + ".blob.core.windows.net", credential=azure_credential)
     container_client = blob_service_client.get_container_client(AZURE_STG_RESUME_CONTAINER) 
     #delete all blobs in the container for staged resumes
@@ -316,6 +322,15 @@ def clearData():
 
     return jsonify({"success": "data cleared"}), 200
 
+@app.route("/indexUploadedFiles", methods=["POST"])
+def indexUploadedFiles():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+    approach = "irf"
+    impl = indexResumeFiles_approaches.get(approach)
+    #TODO: Fix this to actually work
+    r = impl.run(openai_token, azure_credential) 
 
 def ensure_openai_token():
     global openai_token
