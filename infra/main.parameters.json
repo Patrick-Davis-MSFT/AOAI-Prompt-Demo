@@ -20,11 +20,26 @@
       "storageAccountName": {
         "value": "${AZURE_STORAGE_ACCOUNT}"
       },
+      "formRecognizerServiceName": {
+        "value": "${AZURE_FORMRECOGNIZER_SERVICE}"
+      },
+      "formRecognizerSkuName": {
+        "value": "S0"
+      },
       "chatGptDeploymentName": {
         "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat}"
       },
       "gptDeploymentName": {
         "value": "${AZURE_OPENAI_GPT_DEPLOYMENT=davinci}"
+      },
+      "searchIndexName": {
+        "value": "${AZURE_SEARCH_INDEX=gptkbindex}"
+      },
+      "searchServiceName": {
+        "value": "${AZURE_SEARCH_SERVICE}"
+      },
+      "searchServiceSkuName": {
+        "value": "standard"
       }
     }
 }

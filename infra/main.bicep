@@ -28,11 +28,22 @@ param backendServiceName string = ''
 
 param storageAccountName string = ''
 param storageResourceGroupLocation string = location
-param storageContainerName string = 'content'
+param storageIdxResumeContainerName string = 'indexed-resumes'
+param storageStgResumeContainerName string = 'stage-resumes'
+
+
+param formRecognizerServiceName string = ''
+param formRecognizerSkuName string = 'S0'
 
 param openAiServiceName string = ''
 param openAiResourceGroupName string = ''
 param openAiSkuName string = 'S0'
+
+
+param searchServiceName string = ''
+param searchServiceSkuName string = 'standard'
+param searchIndexName string // Set in main.parameters.json
+
 @description('Location for the OpenAI resource group')
 @allowed(['eastus', 'francecentral', 'southcentralus', 'uksouth', 'westeurope'])
 @metadata({
@@ -140,6 +151,22 @@ module openAi 'components/ai/cognitiveservices.bicep' = {
   }
 }
 
+//Create Form Reconizer for PDF indexing
+module formRecognizer 'components/ai/documentrecog.bicep' = {
+  name: 'formrecognizer'
+  scope: rg
+  params: {
+    name: !empty(formRecognizerServiceName) ? formRecognizerServiceName : '${abbrs.cognitiveServicesFormRecognizer}${resourceToken}'
+    kind: 'FormRecognizer'
+    location: rg.location
+    tags: tags
+    sku: {
+      name: formRecognizerSkuName
+    }
+  }
+}
+
+
 //create a blob storage account
 module storage 'components/storage/storage-account.bicep' = {
   name: 'storage'
@@ -158,7 +185,11 @@ module storage 'components/storage/storage-account.bicep' = {
     }
     containers: [
       {
-        name: storageContainerName
+        name: storageIdxResumeContainerName
+        publicAccess: 'None'
+      }
+      {
+        name: storageStgResumeContainerName
         publicAccess: 'None'
       }
     ]
@@ -196,10 +227,13 @@ module backend 'components/host/appservice.bicep' = {
     managedIdentity: true
     appSettings: {
       AZURE_STORAGE_ACCOUNT: storage.outputs.name
-      AZURE_STORAGE_CONTAINER: storageContainerName
+      AZURE_IDX_RESUME_CONTAINER: storageIdxResumeContainerName
+      AZURE_STG_RESUME_CONTAINER: storageStgResumeContainerName
       AZURE_OPENAI_SERVICE: openAi.outputs.name
-      //AZURE_SEARCH_INDEX: searchIndexName
-      //AZURE_SEARCH_SERVICE: searchService.outputs.name
+      AZURE_FORMRECOGNIZER_SERVICE: formRecognizer.outputs.name
+      AZURE_FORMRECOGNIZER_KEY: formRecognizer.outputs.accountKey
+      AZURE_SEARCH_INDEX: searchIndexName
+      AZURE_SEARCH_SERVICE: searchService.outputs.name
       AZURE_OPENAI_GPT_DEPLOYMENT: gptDeploymentName
       AZURE_OPENAI_CHATGPT_DEPLOYMENT: chatGptDeploymentName
       AZURE_OPENAI_EMB_DEPLOYMENT: embeddingDeploymentName
@@ -207,7 +241,26 @@ module backend 'components/host/appservice.bicep' = {
   }
 }
 
-//Security roles for the application
+//Create search service
+module searchService 'components/search/search-services.bicep' = {
+  name: 'search-service'
+  scope: rg
+  params: {
+    name: !empty(searchServiceName) ? searchServiceName : 'gptkb-${resourceToken}'
+    location: rg.location
+    tags: tags
+    authOptions: {
+      aadOrApiKey: {
+        aadAuthFailureMode: 'http401WithBearerChallenge'
+      }
+    }
+    sku: {
+      name: searchServiceSkuName
+    }
+    semanticSearch: 'free'
+  }
+}
+
 // USER ROLES
 module openAiRoleUser 'components/security/role.bicep' = {
   scope: openAiResourceGroup
@@ -215,6 +268,16 @@ module openAiRoleUser 'components/security/role.bicep' = {
   params: {
     principalId: principalId
     roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+    principalType: 'User'
+  }
+}
+
+module formRecognizerRoleUser 'components/security/role.bicep' = {
+  scope: rg
+  name: 'formrecognizer-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908'
     principalType: 'User'
   }
 }
@@ -229,13 +292,42 @@ module storageRoleUser 'components/security/role.bicep' = {
   }
 }
 
-
 module storageContribRoleUser 'components/security/role.bicep' = {
   scope: rg
   name: 'storage-contribrole-user'
   params: {
     principalId: principalId
     roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+    principalType: 'User'
+  }
+}
+
+module searchRoleUser 'components/security/role.bicep' = {
+  scope: rg
+  name: 'search-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+    principalType: 'User'
+  }
+}
+
+module searchContribRoleUser 'components/security/role.bicep' = {
+  scope: rg
+  name: 'search-contrib-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
+    principalType: 'User'
+  }
+}
+
+module searchSvcContribRoleUser 'components/security/role.bicep' = {
+  scope: rg
+  name: 'search-svccontrib-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
     principalType: 'User'
   }
 }
@@ -261,6 +353,46 @@ module storageRoleBackend 'components/security/role.bicep' = {
   }
 }
 
+module searchRoleBackend 'components/security/role.bicep' = {
+  scope: rg
+  name: 'search-role-backend'
+  params: {
+    principalId: backend.outputs.identityPrincipalId
+    roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module formRecRoleBackend 'components/security/role.bicep' = {
+  scope: rg
+  name: 'formReconizer-role-backend'
+  params: {
+    principalId: backend.outputs.identityPrincipalId
+    roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module formRec2RoleBackend 'components/security/role.bicep' = {
+  scope: rg
+  name: 'form2Reconizer-role-backend'
+  params: {
+    principalId: backend.outputs.identityPrincipalId
+    roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module blobDataContributor 'components/security/role.bicep' = {
+  scope: rg
+  name: 'blobDataContributor-role-backend'
+  params: {
+    principalId: backend.outputs.identityPrincipalId
+    roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+    principalType: 'ServicePrincipal'
+  }
+}
+
 
 
 // Add outputs from the deployment here, if needed.
@@ -273,10 +405,12 @@ module storageRoleBackend 'components/security/role.bicep' = {
 // To see these outputs, run `azd env get-values`,  or `azd env get-values --output json` for json output.
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
+output AZURE_RESOURCE_GROUP string = rg.name
 
 
 output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
-output AZURE_STORAGE_CONTAINER string = storageContainerName
+output AZURE_IDX_RESUME_CONTAINER string = storageIdxResumeContainerName
+output AZURE_STG_RESUME_CONTAINER string = storageIdxResumeContainerName
 
 output BACKEND_URI string = backend.outputs.uri
 
@@ -285,3 +419,9 @@ output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
 output AZURE_OPENAI_GPT_DEPLOYMENT string = gptDeploymentName
 output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
 output AZURE_OPENAI_EMB_DEPLOYMENT string = embeddingDeploymentName
+
+output AZURE_FORMRECOGNIZER_SERVICE string = formRecognizer.outputs.name
+output AZURE_FORMRECOGNIZER_KEY string = formRecognizer.outputs.accountKey
+
+output AZURE_SEARCH_INDEX string = searchIndexName
+output AZURE_SEARCH_SERVICE string = searchService.outputs.name
