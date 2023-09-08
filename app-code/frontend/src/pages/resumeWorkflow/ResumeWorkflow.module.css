@@ -88,3 +88,8 @@
 .modalBody >p:last-child {
     margin-bottom: 0;
 }
+.warningButton {
+    background-color: rgb(184, 2, 2);
+    color: white;
+    font-weight: bolder;
+}

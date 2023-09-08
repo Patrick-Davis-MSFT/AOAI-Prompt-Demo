@@ -92,8 +92,9 @@ export function Component(): JSX.Element {
     };
 
 
-    const sectionStackTokens: IStackTokens = { childrenGap: 10 };
+    const sectionStackTokens: IStackTokens = { childrenGap: 10, padding: 10 };
     const headingStackTokens: IStackTokens = { childrenGap: 50 };
+    const bodyStackTokens: IStackTokens = { childrenGap: 5, padding: 10, maxWidth: 400 };
 
     const [isModalOpen, { setTrue: showModal, setFalse: hideModal }] = useBoolean(false);
     const [isDraggable, { toggle: toggleIsDraggable }] = useBoolean(false);
@@ -132,6 +133,23 @@ export function Component(): JSX.Element {
                         <h1>{openBoxTitle}</h1>
                     </Stack.Item>
                 </Stack>
+            </Stack>
+        </Stack>
+        <Stack enableScopedSelectors horizontal tokens={bodyStackTokens}>
+        <Stack enableScopedSelectors>
+            <Stack.Item align="center">
+            <h2>Step 1. Update the Resume Pool</h2>
+            </Stack.Item>
+            <Stack.Item align="start">
+            <DefaultButton className={styles.warningButton} onClick={showModal} >Clear Existing Data</DefaultButton>
+            </Stack.Item>
+            <Stack.Item align="start">
+            <h2>Upload Button</h2>
+            </Stack.Item>
+            
+            <Stack.Item align="start">
+            <h2>Index Button</h2>
+            </Stack.Item>
             </Stack>
         </Stack>
         <Stack>
