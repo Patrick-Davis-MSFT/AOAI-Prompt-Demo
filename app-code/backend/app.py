@@ -331,6 +331,7 @@ def indexUploadedFiles():
     impl = indexResumeFiles_approaches.get(approach)
     #TODO: Fix this to actually work
     r = impl.run(openai_token, azure_credential) 
+    return jsonify(r), 200
 
 def ensure_openai_token():
     global openai_token

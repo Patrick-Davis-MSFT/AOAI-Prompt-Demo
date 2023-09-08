@@ -17,3 +17,4 @@ class textCompare():
         
     def run(self, openAIAuth, azure_creds): 
         print("indexResumeFiles")
+        return {"status": "Do something here"}
