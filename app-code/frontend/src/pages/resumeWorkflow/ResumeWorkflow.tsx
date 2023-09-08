@@ -1,5 +1,5 @@
-import { ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, Modal, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles } from "@fluentui/react";
-import { OpenBoxOpts, callOpenBox } from "../../api";
+import { ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, Modal, Overlay, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles } from "@fluentui/react";
+import { OpenBoxOpts, callClearData, callOpenBox } from "../../api";
 import { TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { useId, useBoolean } from '@fluentui/react-hooks';
 
@@ -95,24 +95,48 @@ export function Component(): JSX.Element {
     const sectionStackTokens: IStackTokens = { childrenGap: 10, padding: 10 };
     const headingStackTokens: IStackTokens = { childrenGap: 50 };
     const bodyStackTokens: IStackTokens = { childrenGap: 5, padding: 10, maxWidth: 400 };
+    const confirmBtnStackTokens: IStackTokens = { childrenGap: 5, padding: 10 };
 
     const [isModalOpen, { setTrue: showModal, setFalse: hideModal }] = useBoolean(false);
+    const [isModalOpenConfirm, { setTrue: showModalConfirm, setFalse: hideModalConfirm }] = useBoolean(false);
+    const [isOverlayVisible, { toggle: toggleIsOverlayVisible }] = useBoolean(false);
     const [isDraggable, { toggle: toggleIsDraggable }] = useBoolean(false);
     const [keepInBounds, { toggle: toggleKeepInBounds }] = useBoolean(false);
+    const [overlayText, setOverlayText] = useState('Overlay is Here');
     const titleId = useId('howitworks');
+
+    const confirmTitleId = useId('confirm');
 
     const dragOptions = React.useMemo(
         (): IDragOptions => ({
-          moveMenuItemText: 'Move',
-          closeMenuItemText: 'Close',
-          menu: ContextualMenu,
-          keepInBounds,
-          dragHandleSelector: '.ms-Modal-scrollableContent > div:first-child',
+            moveMenuItemText: 'Move',
+            closeMenuItemText: 'Close',
+            menu: ContextualMenu,
+            keepInBounds,
+            dragHandleSelector: '.ms-Modal-scrollableContent > div:first-child',
         }),
         [keepInBounds],
-      );
+    );
 
-      const cancelIcon: IIconProps = { iconName: 'Cancel' };
+    const cancelIcon: IIconProps = { iconName: 'Cancel' };
+
+    const resetData = () => {
+        const callReset = async() => {
+            try{
+            await callClearData();
+            toggleIsOverlayVisible();
+            }
+            catch(e: any){
+                console.log(e);
+                setOverlayText("Error in callReset(): " + e.message)
+            }
+        }
+        setOverlayText("Clearing Data...");
+        toggleIsOverlayVisible();
+        callReset();
+        hideModalConfirm();
+    }
+
     return (<div className={styles.container}>
         <div className={styles.commandsContainer}>
             <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
@@ -122,34 +146,33 @@ export function Component(): JSX.Element {
                 <Stack enableScopedSelectors>
                     <Stack.Item align="start">
                         <span>
-                            <DefaultButton className={styles.commandButton}  onClick={showModal} >How Does this work?</DefaultButton>
+                            <DefaultButton className={styles.commandButton} onClick={showModal} >How Does this work?</DefaultButton>
                         </span></Stack.Item>
                 </Stack>
                 <Stack enableScopedSelectors horizontalAlign="center" className={mergeStyles(styles.headerItem)} >
                     <Stack.Item align="center">
                         {WhiteBoxModel.hideChatLogo ? <></> : chatLogo()}
-                        </Stack.Item>
-                        <Stack.Item align="center">
+                    </Stack.Item>
+                    <Stack.Item align="center">
                         <h1>{openBoxTitle}</h1>
                     </Stack.Item>
                 </Stack>
             </Stack>
         </Stack>
         <Stack enableScopedSelectors horizontal tokens={bodyStackTokens}>
-        <Stack enableScopedSelectors>
-            <Stack.Item align="center">
-            <h2>Step 1. Update the Resume Pool</h2>
-            </Stack.Item>
-            <Stack.Item align="start">
-            <DefaultButton className={styles.warningButton} onClick={showModal} >Clear Existing Data</DefaultButton>
-            </Stack.Item>
-            <Stack.Item align="start">
-            <h2>Upload Button</h2>
-            </Stack.Item>
-            
-            <Stack.Item align="start">
-            <h2>Index Button</h2>
-            </Stack.Item>
+            <Stack enableScopedSelectors>
+                <Stack.Item align="center">
+                    <h2>Step 1. Update the Resume Pool</h2>
+                </Stack.Item>
+                <Stack.Item align="start">
+                    <DefaultButton className={styles.warningButton} onClick={showModalConfirm} >Clear Existing Data</DefaultButton>
+                </Stack.Item>
+                <Stack.Item align="start">
+                    <h2>Upload Button</h2>
+                </Stack.Item>
+                <Stack.Item align="start">
+                    <h2>Index Button</h2>
+                </Stack.Item>
             </Stack>
         </Stack>
         <Stack>
@@ -165,65 +188,105 @@ export function Component(): JSX.Element {
                     />
                     <DefaultButton disabled={isLoading} onClick={makeSummaryRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
                     {gotResult && !isLoading ? <GenericAOAIResult input={aoaiResponse} /> : <></>}
+
+                    {isOverlayVisible && (
+                        <Overlay className={mergeStyles(styles.overlay)}>
+                                                 <Stack enableScopedSelectors>
+                                <Stack.Item align="center" className={styles.overlayContent}>
+                                    <div >{overlayText}</div>
+                                </Stack.Item>
+                            </Stack>
+                        </Overlay>
+                    )}
                     <Modal
-        titleAriaId={titleId}
-        isOpen={isModalOpen}
-        onDismiss={hideModal}
-        isBlocking={false}
-        containerClassName={mergeStyles(styles.modalContainer)}
-        dragOptions={isDraggable ? dragOptions : undefined}
-      >
-        <div className={mergeStyles(styles.modalHeader)}>
-          <IconButton
-            styles={iconButtonStyles}
-            iconProps={cancelIcon}
-            ariaLabel="Close popup modal"
-            onClick={hideModal}
-          />
-          <h2 className={mergeStyles(styles.modalHeading)} id={titleId}>
-            How It Works...
-          </h2>
-        </div>
-        <div className={mergeStyles(styles.modalBody)}>
-            <h3>What it Does</h3>
-          <p>
-            This example is a demonstration of how to use the Azure OpenAI API to analyze resumes for a given job description. 
-            It uses Azure Open AI service, Azure Document Services and cognitive search to find the best matching resumes. This is 
-            an example of a complex workflow that can be built using Azure OpenAI. Because of the complexity of this workflow this 
-            page cannot be changed. 
-          </p>
-          <h3>The Workflow</h3>
-          <p>
-            The workflow starts with a job description. The job description is first summarized by Azure Open AI to produce a list 
-            of skills needed for the position. The job description is then sent to Azure Cognitive Search to find resumes that match
-            the skills needed for the position. The resumes are then returned to Azure Open AI to compare with the job description and 
-            give a score for each resume. The resumes are then sorted by scored and recommendations are returned to the user.
-          </p>
-          <h3>How to Use the Demo</h3>
-          <p>The following inputs are required from the user.</p>
-          <ul>
-            <li>Job Description</li>
-            <li>Resumes in <i>PDF</i> format</li>
-            <li>Azure Cloud Subscription and this demo deployed</li>
-            <li>A basic level of prompt engineering is helpful</li>
-          </ul>
-          <p>
-            Once the demo and infrastructure is deployed. Follow these steps to use the demo on this page:
-          </p>
-          <ol>
-            <li>If you are using a new batch of resumes press the reset button
-            <ul>
-            <li>This will clear all information that is stored in the storage account, search indexing and fields on the UI.</li>
-            <li>You <i>must</i> reload and index all Resumes after pressing this button.</li>
-            </ul></li>
-            <li>Select the resumes to upload and click upload.</li>
-            <li>Once the resumes are staged. Index the resumes. <i>Indexing can take a few minutes.</i>
-            <ul><li> Do <b>not</b> leave the page. This can interrupt the process.</li></ul></li>
-            <li>Once the resumes are indexed. Enter the job description and click submit.</li>
-            <li>View the results.</li>
-          </ol>
-        </div>
-      </Modal>
+                        titleAriaId={confirmTitleId}
+                        isOpen={isModalOpenConfirm}
+                        onDismiss={hideModalConfirm}
+                        isBlocking={false}
+                        containerClassName={mergeStyles(styles.modalContainer)}
+                        dragOptions={isDraggable ? dragOptions : undefined}>
+                        <IconButton
+                            styles={iconButtonStyles}
+                            iconProps={cancelIcon}
+                            ariaLabel="Close confirm modal"
+                            onClick={hideModalConfirm} />
+                        <Stack enableScopedSelectors >
+                            <Stack.Item align="center">
+                                <h2>Are you Sure?</h2>
+                            </Stack.Item>
+                            <Stack.Item align="center">
+                                <Stack enableScopedSelectors horizontal tokens={confirmBtnStackTokens}>
+                                    <Stack.Item align="center">
+                                        <DefaultButton className={styles.warningButton} onClick={() => resetData()} >Yes</DefaultButton>
+                                    </Stack.Item>
+                                    <Stack.Item align="center">
+                                        <DefaultButton className={styles.notWarningButton} onClick={hideModalConfirm} >No</DefaultButton>
+                                    </Stack.Item>
+                                </Stack>
+                            </Stack.Item>
+                            <Stack.Item align="center">
+                                <div>Note: This will clear all existing data.</div>
+                            </Stack.Item>
+                        </Stack>
+                    </Modal>
+                    <Modal
+                        titleAriaId={titleId}
+                        isOpen={isModalOpen}
+                        onDismiss={hideModal}
+                        isBlocking={false}
+                        containerClassName={mergeStyles(styles.modalContainer)}
+                        dragOptions={isDraggable ? dragOptions : undefined}>
+                        <div className={mergeStyles(styles.modalHeader)}>
+                            <IconButton
+                                styles={iconButtonStyles}
+                                iconProps={cancelIcon}
+                                ariaLabel="Close popup modal"
+                                onClick={hideModal}
+                            />
+                            <h2 className={mergeStyles(styles.modalHeading)} id={titleId}>
+                                How It Works...
+                            </h2>
+                        </div>
+                        <div className={mergeStyles(styles.modalBody)}>
+                            <h3>What it Does</h3>
+                            <p>
+                                This example is a demonstration of how to use the Azure OpenAI API to analyze resumes for a given job description.
+                                It uses Azure Open AI service, Azure Document Services and cognitive search to find the best matching resumes. This is
+                                an example of a complex workflow that can be built using Azure OpenAI. Because of the complexity of this workflow this
+                                page cannot be changed.
+                            </p>
+                            <h3>The Workflow</h3>
+                            <p>
+                                The workflow starts with a job description. The job description is first summarized by Azure Open AI to produce a list
+                                of skills needed for the position. The job description is then sent to Azure Cognitive Search to find resumes that match
+                                the skills needed for the position. The resumes are then returned to Azure Open AI to compare with the job description and
+                                give a score for each resume. The resumes are then sorted by scored and recommendations are returned to the user.
+                            </p>
+                            <h3>How to Use the Demo</h3>
+                            <p>The following inputs are required from the user.</p>
+                            <ul>
+                                <li>Job Description</li>
+                                <li>Resumes in <i>PDF</i> format</li>
+                                <li>Azure Cloud Subscription and this demo deployed</li>
+                                <li>A basic level of prompt engineering is helpful</li>
+                            </ul>
+                            <p>
+                                Once the demo and infrastructure is deployed. Follow these steps to use the demo on this page:
+                            </p>
+                            <ol>
+                                <li>If you are using a new batch of resumes press the reset button
+                                    <ul>
+                                        <li>This will clear all information that is stored in the storage account, search indexing and fields on the UI.</li>
+                                        <li>You <i>must</i> reload and index all Resumes after pressing this button.</li>
+                                    </ul></li>
+                                <li>Select the resumes to upload and click upload.</li>
+                                <li>Once the resumes are staged. Index the resumes. <i>Indexing can take a few minutes.</i>
+                                    <ul><li> Do <b>not</b> leave the page. This can interrupt the process.</li></ul></li>
+                                <li>Once the resumes are indexed. Enter the job description and click submit.</li>
+                                <li>View the results.</li>
+                            </ol>
+                        </div>
+                    </Modal>
                     <Panel
                         headerText="Configure answer generation"
                         isOpen={isConfigPanelOpen}
@@ -294,17 +357,17 @@ export function Component(): JSX.Element {
 const theme = getTheme();
 
 
-  const iconButtonStyles: Partial<IButtonStyles> = {
+const iconButtonStyles: Partial<IButtonStyles> = {
     root: {
-      color: theme.palette.neutralPrimary,
-      marginLeft: 'auto',
-      marginTop: '1px',
-      marginRight: '2px',
-      float: 'right',
+        color: theme.palette.neutralPrimary,
+        marginLeft: 'auto',
+        marginTop: '1px',
+        marginRight: '2px',
+        float: 'right',
     },
     rootHovered: {
-      color: theme.palette.neutralDark,
+        color: theme.palette.neutralDark,
     },
-  };
+};
 
 Component.displayName = "ResumeWorkflow";

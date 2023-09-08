@@ -410,7 +410,7 @@ output AZURE_RESOURCE_GROUP string = rg.name
 
 output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output AZURE_IDX_RESUME_CONTAINER string = storageIdxResumeContainerName
-output AZURE_STG_RESUME_CONTAINER string = storageIdxResumeContainerName
+output AZURE_STG_RESUME_CONTAINER string = storageStgResumeContainerName
 
 output BACKEND_URI string = backend.outputs.uri
 

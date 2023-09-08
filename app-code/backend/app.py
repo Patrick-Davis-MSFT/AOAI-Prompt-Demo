@@ -8,6 +8,7 @@ import sys
 from flask import Flask, request, jsonify, send_file, abort
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
+from azure.search.documents.indexes import SearchIndexClient
 from approaches.retrievethenread import RetrieveThenReadApproach
 from approaches.readretrieveread import ReadRetrieveReadApproach
 from approaches.readdecomposeask import ReadDecomposeAsk
@@ -27,6 +28,8 @@ AZURE_OPENAI_GPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_GPT_DEPLOYMENT") or "
 AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHATGPT_DEPLOYMENT") or "chat"
 AZURE_OPENAI_CHATGPT_MODEL = os.environ.get("AZURE_OPENAI_CHATGPT_MODEL") or "gpt-35-turbo"
 AZURE_OPENAI_EMB_DEPLOYMENT = os.environ.get("AZURE_OPENAI_EMB_DEPLOYMENT") or "embedding"
+AZURE_STG_RESUME_CONTAINER = os.environ.get("AZURE_STG_RESUME_CONTAINER") or "stage-resumes"
+AZURE_IDX_RESUME_CONTAINER = os.environ.get("AZURE_IDX_RESUME_CONTAINER") or "indexed-resumes"
 
 KB_FIELDS_CONTENT = os.environ.get("KB_FIELDS_CONTENT") or "content"
 KB_FIELDS_CATEGORY = os.environ.get("KB_FIELDS_CATEGORY") or "category"
@@ -237,6 +240,35 @@ def textCompareApi():
     sys.stdout.write("openboxApi: " + str(r))
     sys.stdout.flush()
     return jsonify(r), 200
+
+@app.route("/cleardata", methods=["POST"])
+def clearData():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+    
+    print(f"here")
+    blob_service_client = BlobServiceClient(account_url=f"https://" + AZURE_STORAGE_ACCOUNT + ".blob.core.windows.net", credential=azure_credential)
+    container_client = blob_service_client.get_container_client(AZURE_STG_RESUME_CONTAINER) 
+    #delete all blobs in the container for staged resumes
+    blobs = container_client.list_blobs()
+    for blob in blobs:
+        container_client.delete_blob(blob.name)
+    
+    #delete all blobs in the container for indexed resumes
+    c_indexed_client = blob_service_client.get_container_client(AZURE_IDX_RESUME_CONTAINER) 
+    idxBlobs = c_indexed_client.list_blobs()
+    for blob in idxBlobs:
+        c_indexed_client.delete_blob(blob.name)
+    
+    #delete and recreate the search index
+    search_client = SearchIndexClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
+                                    index_name=AZURE_SEARCH_INDEX,
+                                    credential=azure_credential)
+    search_client.delete_index(AZURE_SEARCH_INDEX)
+
+    return jsonify({"success": "data cleared"}), 200
+
 
 def ensure_openai_token():
     global openai_token

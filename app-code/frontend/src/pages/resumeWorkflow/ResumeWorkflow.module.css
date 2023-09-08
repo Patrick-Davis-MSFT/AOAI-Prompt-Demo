@@ -93,3 +93,34 @@
     color: white;
     font-weight: bolder;
 }
+.notWarningButton {
+    background-color: rgb(90, 184, 2);
+    color: white;
+    font-weight: bolder;
+}
+.overlay{ 
+    background: rgba(63, 63, 63, 0.95);
+bottom: 0;
+color: white;
+font-weight: 900;
+font-size: xx-large;
+left: 0;
+padding: 10px;
+position: absolute;
+right: 0;
+vertical-align: middle;
+}
+
+.overlayContent{
+    font-weight: 900;
+    font-size: xx-large;
+    align-items: 'center';
+    display: 'flex';
+    height: 100%;
+    justify-content: 'center';
+    overflow: 'hidden';
+    vertical-align: middle;
+ }
+ .overlayContent > div{
+    margin-top: 60%;
+ }

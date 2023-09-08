@@ -89,6 +89,17 @@ export async function callOpenCompareBox(options: OpenBoxCompareOpts): Promise<A
     return retVal;
 }
 
+export async function callClearData(): Promise<string> {
+    const response = await fetch(`/cleardata`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({"clear": "true"})
+    });
+    const json = await response.json();
+    return json;
+}
 
 export async function callOpenBox(options: OpenBoxOpts): Promise<AOAIResult> {
     const response = await fetch(`/openbox`, {
