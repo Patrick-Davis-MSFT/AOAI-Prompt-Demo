@@ -15,6 +15,6 @@ class textCompare():
         self.aoaiService = aoaiService
         self.chatgpt_token_limit = 5000 #get_token_limit(chatgpt_model)
         
-    def run(self, openAIAuth, azure_creds): 
+    def run(self, openAIAuth, azure_credential): 
         print("indexResumeFiles")
         return {"status": "Do something here"}
