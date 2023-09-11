@@ -39,7 +39,7 @@ export async function callSummary(options: SummaryOpts): Promise<AOAIResult> {
             index: choice.index,
             logprobs: choice.logprobs,
             text: choice.text
-    });
+        });
     });
 
     return retVal;
@@ -83,7 +83,7 @@ export async function callOpenCompareBox(options: OpenBoxCompareOpts): Promise<A
             index: choice.index,
             logprobs: choice.logprobs,
             text: choice.text
-    });
+        });
     });
 
     return retVal;
@@ -95,7 +95,7 @@ export async function callClearData(): Promise<string> {
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({"clear": "true"})
+        body: JSON.stringify({ "clear": "true" })
     });
     const json = await response.json();
     return json;
@@ -137,7 +137,7 @@ export async function callOpenBox(options: OpenBoxOpts): Promise<AOAIResult> {
             index: choice.index,
             logprobs: choice.logprobs,
             text: choice.text
-    });
+        });
     });
 
     return retVal;
@@ -164,23 +164,23 @@ export async function streamToBlob(readableStream: ReadableStream): Promise<Blob
     const reader = readableStream.getReader();
     const chunks = [];
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
     }
     return new Blob(chunks, { type: "application/octet-stream" });
-  }
+}
 
-export  async function uploadBlob(blob: Blob, fName: string): Promise<void> {
+export async function uploadBlob(blob: Blob, fName: string): Promise<void> {
     const formData = new FormData();
     formData.append("file", blob, fName);
     await fetch("/upload", {
-      method: "POST",
-      body: formData,
+        method: "POST",
+        body: formData,
     });
-  }
+}
 
-  export async function getReadyFiles(): Promise<ReadyFiles> {
+export async function getReadyFiles(): Promise<ReadyFiles> {
     console.log("Getting ready files");
     const response = await fetch("/readyFiles", {
         method: "GET",
@@ -202,11 +202,11 @@ export async function removeStagedFile(fileName: string): Promise<void> {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({"fileName": fileName})
+        body: JSON.stringify({ "fileName": fileName })
     });
     return response.json();
 }
-
+/*
 export async function indexReadyFiles(): Promise<String> {
     const response = await fetch("/indexUploadedFiles", {
         method: "GET",
@@ -221,4 +221,24 @@ export async function indexReadyFiles(): Promise<String> {
     }
 
     return parsedResponse.text();
+}
+*/
+export async function indexReadyFiles(setReturn: (result: string) => void): Promise<void> {
+    const response = await fetch("/indexUploadedFilesStream", {
+        method: "GET"
+    });
+
+
+    if (response.status > 299 || !response.ok || response.body == null) {
+        throw Error("Indexing files: Unknown error: " + response.statusText);
+    }
+    const reader = response.body.getReader();
+    var result: string = "";
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        var newValue = new TextDecoder().decode(value);
+        result += newValue + "\n";
+        setReturn(result);
+    }
 }

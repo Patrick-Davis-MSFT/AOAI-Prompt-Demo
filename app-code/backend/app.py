@@ -2,10 +2,12 @@ import os
 import io
 import mimetypes
 import time
+import threading
+import queue
 import logging
 import openai
 import sys
-from flask import Flask, request, jsonify, send_file, abort
+from flask import Flask, request, jsonify, send_file, abort, Response
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
@@ -99,7 +101,15 @@ text_compare_approaches = {
 }
 
 indexResumeFiles_approaches = {
-    "irf": indexResumeFiles(AZURE_STG_RESUME_CONTAINER, AZURE_IDX_RESUME_CONTAINER, AZURE_FORMRECOGNIZER_SERVICE, AZURE_FORMRECOGNIZER_KEY, AZURE_SEARCH_SERVICE, AZURE_SEARCH_INDEX, AZURE_OPENAI_EMB_DEPLOYMENT, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_SERVICE)
+    "irf": indexResumeFiles(AZURE_STORAGE_ACCOUNT,
+                            AZURE_STG_RESUME_CONTAINER, 
+                            AZURE_IDX_RESUME_CONTAINER, 
+                            AZURE_FORMRECOGNIZER_SERVICE, 
+                            AZURE_FORMRECOGNIZER_KEY, 
+                            AZURE_SEARCH_SERVICE, 
+                            AZURE_SEARCH_INDEX, 
+                            AZURE_OPENAI_EMB_DEPLOYMENT, 
+                            AZURE_OPENAI_SERVICE)
 }
 
 app = Flask(__name__)
@@ -177,12 +187,7 @@ def upload():
     ensure_openai_token()
     try:
 
-        sys.stdout.write("Upload Started")
-        sys.stdout.write("starting file \n")
-        sys.stdout.flush()
         file = request.files['file']
-        sys.stdout.write("file \n" + str(file.name))
-        sys.stdout.flush()
         # Connect to Azure Storage
         blob_service_client = BlobServiceClient(account_url=f"https://" + AZURE_STORAGE_ACCOUNT + ".blob.core.windows.net", credential=azure_credential)
         container_client = blob_service_client.get_container_client(AZURE_STG_RESUME_CONTAINER)
@@ -193,8 +198,6 @@ def upload():
         #with file as data:
         #    container_client.upload_blob(file.name, data, overwrite=True)
 
-        sys.stdout.write("End \n")
-        sys.stdout.flush()
         return jsonify({"result":"File uploaded to Azure Storage!"})
     except Exception as e:
         logging.exception("Exception in /upload")
@@ -322,16 +325,41 @@ def clearData():
 
     return jsonify({"success": "data cleared"}), 200
 
-@app.route("/indexUploadedFiles", methods=["POST"])
+@app.route("/indexUploadedFiles", methods=["GET"])
 def indexUploadedFiles():
     ensure_openai_token()
-    if not request.json:
-        return jsonify({"error": "request must be json"}), 400
+    
+
     approach = "irf"
     impl = indexResumeFiles_approaches.get(approach)
     #TODO: Fix this to actually work
-    r = impl.run(openai_token, azure_credential) 
-    return jsonify(r), 200
+    #r = impl.run(openai_token, azure_credential) 
+    return jsonify({"deadnow":"dead"}), 200
+
+@app.route("/indexUploadedFilesStream", methods=["GET"])
+def indexUploadedFilesStream():
+    ensure_openai_token()
+    
+    out = queue.Queue()
+
+    def indexProcess(n, out:queue.Queue):
+        approach = "irf"
+        impl = indexResumeFiles_approaches.get(approach)
+        #TODO: Fix this to actually work
+        impl.run(openai_token, azure_credential, out) 
+
+    thread = threading.Thread(target=indexProcess, args=(1, out))
+    thread.start()
+    
+    def generate():
+        while(thread.is_alive()):
+            apiResult:str = None
+            if not out.empty():
+                apiResult = out.get()
+            if apiResult is not None:
+                yield apiResult + "\n"
+    
+    return Response(generate(), mimetype='text/plain')
 
 def ensure_openai_token():
     global openai_token

@@ -1,4 +1,4 @@
-import { Text, ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, List, Modal, Overlay, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles, CommandButton } from "@fluentui/react";
+import { Text, ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, List, Modal, Overlay, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles, CommandButton, TextField } from "@fluentui/react";
 import { OpenBoxOpts, ReadyFile, callClearData, callOpenBox, getReadyFiles, indexReadyFiles, removeStagedFile, streamToBlob, uploadBlob } from "../../api";
 import { TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { useId, useBoolean } from '@fluentui/react-hooks';
@@ -48,6 +48,7 @@ export function Component(): JSX.Element {
     const [gotResult, setGotResult] = useState<boolean>(false);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [streamOutput, setStreamOutput] = useState<string>("");
 
 
     const makeSummaryRequest = async () => {
@@ -158,7 +159,7 @@ export function Component(): JSX.Element {
         event.preventDefault();
         if (!file) return;
 
-        setOverlayText("Uploading" + file.name + "...");
+        setOverlayText("Uploading: " + file.name + "...");
         toggleIsOverlayVisible();
         try {
             setFileUploading(true);
@@ -193,11 +194,15 @@ export function Component(): JSX.Element {
         removeStagedItem(name);
     }
 
+    const getStreamOutput = (data: string) => {
+        setStreamOutput(data);
+    }
     const callIndexFiles = async () => {
         try {
-            const retValue = await indexReadyFiles();
+            const retValue = await indexReadyFiles(getStreamOutput);
             console.log(retValue);
             await setReadyFileList();
+            setStreamOutput("");
         }
         catch (error: any) {
             console.log(error);
@@ -219,7 +224,6 @@ export function Component(): JSX.Element {
 
     const onRenderCellFiles = (item?: ReadyFile, index?: number | undefined): JSX.Element | null => {
         if (!item) return null;
-        console.log(item);
         return (<>
             <div className={styles.fileOptContainer}>
                 <span className={styles.fileOption}><Document24Regular />
@@ -230,6 +234,15 @@ export function Component(): JSX.Element {
             </div>
         </>);
     };
+    const onRenderStreamOutput = (item?: string, index?: number | undefined): JSX.Element | null => {
+        if (!item) return null;
+        console.log(item);
+        return (<>
+            <div className={styles.streamOutput}>
+                <Text variant="large">{item}</Text>
+            </div>
+        </>);
+    }
 
     return (<div className={styles.container}>
         <div className={styles.commandsContainer}>
@@ -307,6 +320,7 @@ export function Component(): JSX.Element {
                             <Stack enableScopedSelectors>
                                 <Stack.Item align="center" className={styles.overlayContent}>
                                     <div >{overlayText}</div>
+                                    <pre className={mergeStyles(styles.indexOut)}>{streamOutput}</pre>
                                 </Stack.Item>
                             </Stack>
                         </Overlay>

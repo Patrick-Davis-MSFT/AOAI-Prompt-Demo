@@ -122,5 +122,13 @@ vertical-align: middle;
     vertical-align: middle;
  }
  .overlayContent > div{
-    margin-top: 60%;
+    margin-top: 5rem;
+ }
+
+ .indexOut {
+    overflow: auto !important;
+    max-height: 25em;
+    display: flex;
+    flex-direction: column-reverse;
+    font-size: medium;
  }
