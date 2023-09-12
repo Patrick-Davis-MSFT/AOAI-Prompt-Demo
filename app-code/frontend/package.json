@@ -13,8 +13,11 @@
     "@fluentui/react": "^8.111.0",
     "@fluentui/react-components": "^9.30.0",
     "@fluentui/react-icons": "^2.0.211",
+    "@uiw/react-md-editor": "^3.23.5",
+    "raw-loader": "^4.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-markdown": "^8.0.7",
     "react-router": "^6.15.0",
     "react-router-dom": "^6.15.0",
     "use-file-picker": "^1.7.0"

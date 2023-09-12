@@ -1,12 +1,12 @@
 # Job Title: Senior Software Engineer – Applications (Viva Glint)
-**Location**: Arlington, Virginia, United States
-**Worksite**: Up to 100% work from home
-**Role Type**: Individual Contributor
-**Discipline**: Software Engineering
-**Job Number**: 123456789
-**Travel**: 25%
-**Profession**: Software Engineering
-**Employment Type**: Full-Time
+- **Location**: Arlington, Virginia, United States
+- **Worksite**: Up to 100% work from home
+- **Role Type**: Individual Contributor
+- **Discipline**: Software Engineering
+- **Job Number**: 123456789
+- **Travel**: 25%
+- **Profession**: Software Engineering
+- **Employment Type**: Full-Time
 
 ## Overview
 **What is Viva?**
