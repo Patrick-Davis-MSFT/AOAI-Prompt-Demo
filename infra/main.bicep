@@ -65,6 +65,11 @@ param embeddingDeploymentCapacity int = 30
 param embeddingModelName string = 'text-embedding-ada-002'
 
 
+param largeGptDeploymentName string // Set in main.parameters.json
+param largegptDeploymentCapacity int = 120
+param largegptModelName string = 'gpt-35-turbo-16k'
+
+
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
@@ -124,6 +129,18 @@ module openAi 'components/ai/cognitiveservices.bicep' = {
         sku: {
           name: 'Standard'
           capacity: gptDeploymentCapacity
+        }
+      }
+      {
+        name: largeGptDeploymentName
+        model: {
+          format: 'OpenAI'
+          name: largegptModelName
+          version: '0301'
+        }
+        sku: {
+          name: 'Standard'
+          capacity: largegptDeploymentCapacity
         }
       }
       {
@@ -236,7 +253,9 @@ module backend 'components/host/appservice.bicep' = {
       AZURE_SEARCH_SERVICE: searchService.outputs.name
       AZURE_OPENAI_GPT_DEPLOYMENT: gptDeploymentName
       AZURE_OPENAI_CHATGPT_DEPLOYMENT: chatGptDeploymentName
+      AZURE_OPENAI_LARGEGPT_DEPLOYMENT: largeGptDeploymentName
       AZURE_OPENAI_EMB_DEPLOYMENT: embeddingDeploymentName
+      AZURE_OPENAI_LARGEGPT_MODEL: largegptModelName
     }
   }
 }
@@ -417,6 +436,8 @@ output BACKEND_URI string = backend.outputs.uri
 output AZURE_OPENAI_SERVICE string = openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
 output AZURE_OPENAI_GPT_DEPLOYMENT string = gptDeploymentName
+output AZURE_OPENAI_LARGEGPT_DEPLOYMENT string = largeGptDeploymentName
+output AZURE_OPENAI_LARGEGPT_MODEL string = largegptModelName
 output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
 output AZURE_OPENAI_EMB_DEPLOYMENT string = embeddingDeploymentName
 

@@ -32,6 +32,9 @@
       "chatGptDeploymentName": {
         "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat}"
       },
+      "largeGptDeploymentName": {
+        "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat16k}"
+      },
       "gptDeploymentName": {
         "value": "${AZURE_OPENAI_GPT_DEPLOYMENT=davinci}"
       },

@@ -1,5 +1,5 @@
 import { AOAIResult, aoaiChoices } from "../components/GenericAOAIResult";
-import { Indexes, OpenBoxCompareOpts, OpenBoxOpts, ReadyFiles, SummaryOpts, SummaryResponse } from "./models";
+import { Indexes, OpenBoxCompareOpts, OpenBoxOpts, ReadyFiles, SearchTermOpts, SummaryOpts, SummaryResponse } from "./models";
 import { FileContent } from "use-file-picker";
 
 export async function callSummary(options: SummaryOpts): Promise<AOAIResult> {
@@ -144,6 +144,50 @@ export async function callOpenBox(options: OpenBoxOpts): Promise<AOAIResult> {
 }
 
 
+export async function calljdSeachTerms(options: SearchTermOpts): Promise<AOAIResult> {
+    const response = await fetch(`/jobDescSkills`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            searchTermPrompt: options.searchTermPrompt,
+            jobDescription: options.jobDescription,
+            temperature: options.temperature,
+            top_p: options.top_p,
+            frequency_penalty: options.frequency_penalty,
+            presence_penalty: options.presence_penalty,
+            approach: "obt", //options.approach,
+            maxTokens: options.maxTokens,
+        }),
+    });
+    const json = await response.json();
+    var retVal = {} as AOAIResult;
+    retVal = {
+        created: json.created,
+        id: json.id,
+        model: json.model,
+        object: json.object,
+        usage: {
+            completion_tokens: json.usage.completion_tokens,
+            prompt_tokens: json.usage.prompt_tokens,
+            total_tokens: json.usage.total_tokens
+        },
+        choices: new Array<aoaiChoices>()
+    };
+    json.choices.forEach((choice: any) => {
+        retVal.choices.push({
+            finish_reason: choice.finish_reason,
+            index: choice.index,
+            logprobs: choice.logprobs,
+            text: choice.text,
+            message: { role: choice.message.role, content: choice.message.content }
+        });
+    });
+
+    return retVal;
+}
+
 export async function getIndexes(): Promise<Indexes> {
     const response = await fetch("/indexes", {
         method: "GET",
@@ -206,23 +250,7 @@ export async function removeStagedFile(fileName: string): Promise<void> {
     });
     return response.json();
 }
-/*
-export async function indexReadyFiles(): Promise<String> {
-    const response = await fetch("/indexUploadedFiles", {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
 
-    const parsedResponse = await response;
-    if (response.status > 299 || !response.ok) {
-        throw Error("Indexing files: Unknown error");
-    }
-
-    return parsedResponse.text();
-}
-*/
 export async function indexReadyFiles(setReturn: (result: string) => void): Promise<void> {
     const response = await fetch("/indexUploadedFilesStream", {
         method: "GET"

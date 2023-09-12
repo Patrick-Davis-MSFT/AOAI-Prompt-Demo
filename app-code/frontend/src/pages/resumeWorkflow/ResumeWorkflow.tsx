@@ -1,5 +1,5 @@
 import { Text, ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, List, Modal, Overlay, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles, CommandButton, TextField } from "@fluentui/react";
-import { OpenBoxOpts, ReadyFile, callClearData, callOpenBox, getReadyFiles, indexReadyFiles, removeStagedFile, streamToBlob, uploadBlob } from "../../api";
+import { OpenBoxOpts, ReadyFile, SearchTermOpts, callClearData, callOpenBox, calljdSeachTerms, getReadyFiles, indexReadyFiles, removeStagedFile, streamToBlob, uploadBlob } from "../../api";
 import { TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { useId, useBoolean } from '@fluentui/react-hooks';
 
@@ -22,16 +22,27 @@ export function Component(): JSX.Element {
     //section for White Boxing Text 
     var openBoxTitle: string = "Resume Workflow";
     var obPromptlbl: string = "Open Box Prompt";
-    var openBoxPromptTXT: string = "### The Job Description below is formatted with Markdown. Find the top five skills that an applicant would need to perform the job successfully according to the job description. Only use information noted in the job description and no where else. Order the skills from most important to least important. Format your answers in a javascript string array such as ['First Skill', 'Second Skill', 'Third Skill', 'Fourth Skill', 'Fifth Skill']. If there are less than five skills that are important return an array of only those skills. If there are no skills that are important return an empty array. ###";
-    var maxTokensInit: number = 250;
-    var maxTokensAllowed: number = 2500;
+    var searchTermPromptTXT: string = "### The User is sending a Job Description formatted with Markdown. Find the top five skills and search terms that an applicant would need to perform the job successfully according to the job description provided. \n " +
+    " Respond first with a JavaScript Array of Objects. Only use information noted in the job description and no where else. \n " + 
+    " Order the skills from most important to least important. \n\n" + 
+    " Format your answers in a javascript string array of objects in the structure {'Skill': 'value', 'Search Term': 'value'} such as \n" + 
+    "```\n const topSkills = [{'First Skill': 'value', 'First Search Term': 'value' },  \n " + 
+    "{'Second Skill': 'value', 'Second Search Term': 'value' }, \n " + 
+    "{'Third Skill', 'Third Search Term': 'value' }, \n " + 
+    "{'Fourth Skill': 'value', 'Fourth Search Term': 'value' }, \n " + 
+    "{'Fifth Skill': 'value', 'Fifth Search Term': 'value' }] \n``` \n\n " + 
+    "Replace value with the skill or the search term. \n " + 
+    "Do not include any other information. \n " + 
+    "If there are less than five skills that are important return an array of only those skills. \n " + 
+    "If there are no skills that are important return an empty array. ###";
+    var maxTokensInit: number = 15000;
+    var maxTokensAllowed: number = 15000;
     var chatLogo = () => {
         return (<SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 225, 1)"} aria-hidden="true" aria-label="Chat logo" />);
     }
     if (WhiteBoxModel.useWhiteBox) {
         openBoxTitle = WhiteBoxModel.openBoxTitle;
         obPromptlbl = WhiteBoxModel.obPromptlbl;
-        openBoxPromptTXT = WhiteBoxModel.openBoxPromptTXT;
         maxTokensInit = WhiteBoxModel.maxTokensInit;
         maxTokensAllowed = WhiteBoxModel.maxTokensAllowed;
         if (WhiteBoxModel.chatLogoOverride) {
@@ -46,9 +57,9 @@ export function Component(): JSX.Element {
     const [frequencyPenalty, setFrequencyPenalty] = useState<number>(0);
     const [presencePenalty, setPresencePenalty] = useState<number>(0);
     const [maxTokens, setMaxTokens] = useState<number>(maxTokensInit);
-    const [openBoxPrompt, setOpenBoxPrompt] = useState<string>(openBoxPromptTXT);
-    const [aoaiResponse, setAOAIResponse] = useState<AOAIResult>({} as AOAIResult);
-    const [gotResult, setGotResult] = useState<boolean>(false);
+    const [searchTermPrompt, setSearchTermPrompt] = useState<string>(searchTermPromptTXT);
+    const [aoaiSkillTermsResponse, setAOAISkillTermsResponse] = useState<AOAIResult>({} as AOAIResult);
+    const [gotSkillTermsResult, setGotSkillTermsResult] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [streamOutput, setStreamOutput] = useState<string>("");
     const [jdValue, setJdValue] = useState<string>(JobDescription);
@@ -57,27 +68,28 @@ export function Component(): JSX.Element {
         setJdValue(value || "");
     }
 
-    const makeSummaryRequest = async () => {
+    const makeSearchTermRequest = async () => {
         setIsLoading(true);
         //remember to divide the number by 10 for Temperature
-        const openBoxOpts: OpenBoxOpts = {
-            openBoxPrompt: openBoxPrompt,
+        const searchTermOpts: SearchTermOpts = {
+            searchTermPrompt: searchTermPrompt,
+            jobDescription: jdValue,
             temperature: temperature / 10,
             top_p: top_p / 10,
             frequency_penalty: frequencyPenalty / 10,
             presence_penalty: presencePenalty / 10,
             maxTokens: maxTokens
         };
-        const response = await callOpenBox(openBoxOpts);
+        const response = await calljdSeachTerms(searchTermOpts);
         const data = await response;
-        setAOAIResponse(data);
-        setGotResult(true);
+        setAOAISkillTermsResponse(data);
+        setGotSkillTermsResult(true);
         setIsLoading(false);
         console.log(data);
     }
 
     const onOpenBoxPromptChange = (ev: ChangeEvent<HTMLTextAreaElement>, newValue: TextareaOnChangeData) => {
-        setOpenBoxPrompt(newValue.value || "");
+        setSearchTermPrompt(newValue.value || "");
     };
 
     const onTemperatureChange = (_ev?: React.SyntheticEvent<HTMLElement, Event>, newValue?: string) => {
@@ -325,21 +337,15 @@ export function Component(): JSX.Element {
                         disabled={false}
                         placeholder={obPromptlbl}
                         areaLabel={obPromptlbl}
-                        defaultText={openBoxPrompt}
+                        defaultText={searchTermPrompt}
                         onChange={onOpenBoxPromptChange}
                     />
-                    <DefaultButton disabled={isLoading} onClick={makeSummaryRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
+                    <DefaultButton disabled={isLoading} onClick={makeSearchTermRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
 
                 </Stack.Item>
                 <Stack.Item grow={2}>
                 <h2>Step 3 - 2. Output from Skilling</h2>
-                <BigInput
-                    disabled={false}
-                    placeholder={obPromptlbl}
-                    areaLabel={obPromptlbl}
-                    defaultText={openBoxPrompt}
-                    onChange={onOpenBoxPromptChange}
-                />
+                {gotSkillTermsResult && !isLoading ? <GenericAOAIResult input={aoaiSkillTermsResponse} /> : <></>}
                 </Stack.Item>
             </Stack>
         </Stack>
@@ -351,10 +357,10 @@ export function Component(): JSX.Element {
                         disabled={false}
                         placeholder={obPromptlbl}
                         areaLabel={obPromptlbl}
-                        defaultText={openBoxPrompt}
+                        defaultText={searchTermPrompt}
                         onChange={onOpenBoxPromptChange}
                     />
-                    <DefaultButton disabled={isLoading} onClick={makeSummaryRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
+                    <DefaultButton disabled={isLoading} onClick={makeSearchTermRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
 
                 </Stack.Item>
                 <Stack.Item grow={2}>
@@ -363,7 +369,7 @@ export function Component(): JSX.Element {
                     disabled={false}
                     placeholder={obPromptlbl}
                     areaLabel={obPromptlbl}
-                    defaultText={openBoxPrompt}
+                    defaultText={searchTermPrompt}
                     onChange={onOpenBoxPromptChange}
                 />
                 </Stack.Item>
@@ -377,10 +383,10 @@ export function Component(): JSX.Element {
                         disabled={false}
                         placeholder={obPromptlbl}
                         areaLabel={obPromptlbl}
-                        defaultText={openBoxPrompt}
+                        defaultText={searchTermPrompt}
                         onChange={onOpenBoxPromptChange}
                     />
-                    <DefaultButton disabled={isLoading} onClick={makeSummaryRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
+                    <DefaultButton disabled={isLoading} onClick={makeSearchTermRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
 
                 </Stack.Item>
             </Stack>
@@ -393,13 +399,13 @@ export function Component(): JSX.Element {
                         disabled={false}
                         placeholder={obPromptlbl}
                         areaLabel={obPromptlbl}
-                        defaultText={openBoxPrompt}
+                        defaultText={searchTermPrompt}
                         onChange={onOpenBoxPromptChange}
                     />
                 </Stack.Item>
             </Stack>
         </Stack>
-        {gotResult && !isLoading ? <GenericAOAIResult input={aoaiResponse} /> : <></>}
+        {gotSkillTermsResult && !isLoading ? <GenericAOAIResult input={aoaiSkillTermsResponse} /> : <></>}
         {isOverlayVisible && (
             <Overlay className={mergeStyles(styles.overlay)}>
                 <Stack enableScopedSelectors>

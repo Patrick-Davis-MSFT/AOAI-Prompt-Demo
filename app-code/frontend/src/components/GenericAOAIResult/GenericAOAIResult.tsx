@@ -37,7 +37,7 @@ export const GenericAOAIResult = ({ input }: Props) => {
                     <Stack.Item><Field label="Response" className={styles.inputTextArea}>
                         <Textarea className={styles.editArea}
                             resize="both"
-                            size="large">{curr.text}</Textarea>
+                            size="large">{curr.message && curr.message.content? curr.message.content : curr.text}</Textarea>
                     </Field>
                     </Stack.Item>
                     <Stack.Item><Text><b>Tokens Used</b>: {input.usage.total_tokens}</Text></Stack.Item>

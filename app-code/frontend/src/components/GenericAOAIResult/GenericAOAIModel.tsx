@@ -23,7 +23,13 @@ export type aoaiChoices = {
     finish_reason: string,
     index: number,
     logprobs: null,
-    text: string
+    text: string,
+    message?: message
+}
+
+export type message = {
+    role: string,
+    content: string
 }
 export type usage = {
     completion_tokens: number,

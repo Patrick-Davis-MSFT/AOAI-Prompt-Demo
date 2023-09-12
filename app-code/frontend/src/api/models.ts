@@ -44,5 +44,13 @@ export type ReadyFile = {
     name: string;
 }
 
-
+export type SearchTermOpts = {
+    searchTermPrompt: string;
+    jobDescription: string;
+    temperature: number;
+    top_p: number;
+    frequency_penalty: number;
+    presence_penalty: number;
+    maxTokens: number;
+}
 export type ReadyFiles = ReadyFile[];

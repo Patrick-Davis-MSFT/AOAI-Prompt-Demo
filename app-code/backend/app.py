@@ -29,6 +29,8 @@ AZURE_SEARCH_INDEX = os.environ.get("AZURE_SEARCH_INDEX") or "gptkbindex"
 AZURE_OPENAI_SERVICE = os.environ.get("AZURE_OPENAI_SERVICE") or "myopenai"
 AZURE_OPENAI_GPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_GPT_DEPLOYMENT") or "davinci"
 AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHATGPT_DEPLOYMENT") or "chat"
+AZURE_OPENAI_LARGEGPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_LARGEGPT_DEPLOYMENT") or "chat16k"
+AZURE_OPENAI_LARGEGPT_MODEL = os.environ.get("AZURE_OPENAI_LARGEGPT_MODEL") or "chat16k"
 AZURE_OPENAI_CHATGPT_MODEL = os.environ.get("AZURE_OPENAI_CHATGPT_MODEL") or "gpt-35-turbo"
 AZURE_OPENAI_EMB_DEPLOYMENT = os.environ.get("AZURE_OPENAI_EMB_DEPLOYMENT") or "embedding"
 AZURE_STG_RESUME_CONTAINER = os.environ.get("AZURE_STG_RESUME_CONTAINER") or "stage-resumes"
@@ -93,7 +95,7 @@ summarize_full_text_approaches = {
 }
 
 openbox_full_text_approaches = {
-    "obt": openBoxFullText(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+    "obt": openBoxFullText(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, AZURE_OPENAI_LARGEGPT_MODEL, AZURE_OPENAI_LARGEGPT_DEPLOYMENT)
 }
 
 text_compare_approaches = {
@@ -360,6 +362,26 @@ def indexUploadedFilesStream():
                 yield apiResult + "\n"
     
     return Response(generate(), mimetype='text/plain')
+
+@app.route("/jobDescSkills", methods=["POST"])
+def jobDescSkillsApi():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+
+    approach = request.json["approach"]
+    maxTokens = request.json["maxTokens"]
+    impl = openbox_full_text_approaches.get(approach)
+    prompt=request.json["searchTermPrompt"] 
+    usrMessage = request.json["jobDescription"]
+    temperature=request.json["temperature"]
+    top_p=request.json["top_p"]
+    frequency_penalty=request.json["frequency_penalty"]
+    presence_penalty=request.json["presence_penalty"]
+    r = impl.runLarge(prompt,usrMessage, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
+    sys.stdout.write("openboxApi: " + str(r))
+    sys.stdout.flush()
+    return jsonify(r), 200
 
 def ensure_openai_token():
     global openai_token

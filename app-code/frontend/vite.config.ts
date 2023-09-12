@@ -36,7 +36,8 @@ server: {
         "/upload": "http://127.0.0.1:5000",
         "/indexes": "http://127.0.0.1:5000",
         "/readyFiles": "http://127.0.0.1:5000",
-        "/indexUploadedFilesStream": "http://127.0.0.1:5000"
+        "/indexUploadedFilesStream": "http://127.0.0.1:5000",
+        "/jobDescSkills": "http://127.0.0.1:5000"
     }
 }
 })
