@@ -218,7 +218,8 @@ export async function callResumeJD(options: resumeJDCompareReq): Promise<AOAIRes
             prompt_tokens: json.usage.prompt_tokens,
             total_tokens: json.usage.total_tokens
         },
-        choices: new Array<aoaiChoices>()
+        choices: new Array<aoaiChoices>(),
+        source: json.source
     };
     json.choices.forEach((choice: any) => {
         retVal.choices.push({

@@ -42,5 +42,6 @@ export type AOAIResult = {
     id: string,
     model: string,
     object: string,
-    usage: usage
+    usage: usage,
+    source?: string,
 }

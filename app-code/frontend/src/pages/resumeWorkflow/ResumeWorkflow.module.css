@@ -56,6 +56,32 @@
     flex-flow: 'column nowrap';
     align-items: 'stretch';
   }
+.docRetItemBtnDiv {
+    margin-left: 5em;
+    margin-bottom: 1em;
+}
+  .modalContainerSource {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
+    overflow: hidden;
+    height:  90%;
+    width: 75%;
+  }
+  .modalHeaderSource{
+    color: black !important;
+    width: 95% !important;
+    margin: 25px;
+  }
+
+  .modalContainerSourceBody {
+    display: 'flex';
+    flex-flow: 'column nowrap';
+    align-items: 'stretch';
+    height: 95% !important;
+    width: 95% !important;
+    margin: 10px;
+  }
 .modalHeader {flex: '1 1 auto';
     border-top: 4px solid black;
     color: whitesmoke;
@@ -100,16 +126,16 @@
 }
 .overlay{ 
     background: rgba(63, 63, 63, 0.95);
-bottom: 0;
-color: white;
-font-weight: 900;
-font-size: xx-large;
-left: 0;
-padding: 10px;
-position: absolute;
-right: 0;
-vertical-align: middle;
-}
+    bottom: 0;
+    color: white;
+    font-weight: 900;
+    font-size: xx-large;
+    left: 0;
+    padding: 10px;
+    position: absolute;
+    right: 0;
+    vertical-align: middle;
+    }
 
 .overlayContent{
     font-weight: 900;

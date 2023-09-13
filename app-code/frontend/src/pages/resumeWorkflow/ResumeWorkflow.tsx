@@ -100,6 +100,7 @@ export function Component(): JSX.Element {
     }
 
     const compareResumeJD = () => {
+        if (docResponse.length === 0) { alert("Please run the search resumes prompt first."); return; }
         setAOAIResumeRecResp([]);
         compareResumeJDCall();
     }
@@ -219,14 +220,17 @@ export function Component(): JSX.Element {
 
     const [isModalOpen, { setTrue: showModal, setFalse: hideModal }] = useBoolean(false);
     const [isModalOpenConfirm, { setTrue: showModalConfirm, setFalse: hideModalConfirm }] = useBoolean(false);
+    const [isModalOpenSource, { setTrue: showModalSource, setFalse: hideModalSource }] = useBoolean(false);
     const [isOverlayVisible, { toggle: toggleIsOverlayVisible2 }] = useBoolean(false);
     const [isDraggable, { toggle: toggleIsDraggable }] = useBoolean(false);
     const [keepInBounds, { toggle: toggleKeepInBounds }] = useBoolean(false);
     const [overlayText, setOverlayText] = useState('Overlay is Here');
     const titleId = useId('howitworks');
     const confirmTitleId = useId('confirm');
+    const sourceTitleId = useId('sourceModal');
     const [error, setError] = useState<string | null>(null);
     const [uploadIndexDisabled, setUploadIndexDisabled] = useState<boolean>(false); //disable index button
+    const [activeSource, setActiveSource] = useState<string>("");
 
     const toggleIsOverlayVisible = () => {
         window.scrollTo(0, 0);
@@ -379,12 +383,21 @@ export function Component(): JSX.Element {
         </>)
     }
 
+    const showActiveSource = (source?: string) => {
+        if (!source) return;
+        setActiveSource(source);
+        showModalSource();
+    }
+
     const onRenderRecResults = (item?: AOAIResult, index?: number | undefined): JSX.Element | null => {
         if (!item) return null;
         return (<>
             <div className={mergeStyles(styles.docRetItemContainer)}>
                 <span className={mergeStyles(styles.docRetItemSpan)}>
                     <GenericAOAIResult input={item} boxTitle={"AOAI Resume Recommendation #" + index} hideTitle={true} />
+                    <div className={styles.docRetItemBtnDiv}>
+                        {item.source ? <DefaultButton onClick={() => showActiveSource(item.source)}>View Source Resume</DefaultButton> : <></>}
+                    </div>
                 </span>
             </div>
         </>);
@@ -456,9 +469,6 @@ export function Component(): JSX.Element {
                             value={jdValue}
                             onChange={updateJD}
                         />
-
-                        {// static text<MDEditor.Markdown source={jdValue} style={{ whiteSpace: 'pre-wrap' }} /> 
-                        }
                     </div>
                 </Stack.Item>
             </Stack>
@@ -475,7 +485,7 @@ export function Component(): JSX.Element {
                         defaultText={searchTermPrompt}
                         onChange={onOpenBoxPromptChange}
                     />
-                    <DefaultButton disabled={isLoading} onClick={makeSearchTermRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
+                    <DefaultButton disabled={isLoading} onClick={makeSearchTermRequest}>{isLoading ? (<>Loading...</>) : (<>Find Skills from JD</>)} </DefaultButton>
 
                 </Stack.Item>
                 <Stack.Item grow={2}>
@@ -516,7 +526,7 @@ export function Component(): JSX.Element {
                         defaultText={resumeJDComparePrompt}
                         onChange={onResumeJDComparePrompt}
                     />
-                    <DefaultButton disabled={isLoading} onClick={compareResumeJD}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
+                    <DefaultButton disabled={isLoading} onClick={compareResumeJD}>{isLoading ? (<>Loading...</>) : (<>Compare Resumes to JD</>)} </DefaultButton>
 
                 </Stack.Item>
             </Stack>
@@ -539,6 +549,20 @@ export function Component(): JSX.Element {
                 </Stack>
             </Overlay>
         )}
+        <Modal
+            titleAriaId={sourceTitleId}
+            isOpen={isModalOpenSource}
+            onDismiss={hideModalSource}
+            isBlocking={false}
+            containerClassName={mergeStyles(styles.modalContainerSource)}
+            dragOptions={isDraggable ? dragOptions : undefined}>
+            <div className={mergeStyles(styles.modalHeader, styles.modalHeaderSource)}>
+                <h2>Resume Source Document</h2>
+            </div>
+            <div className={mergeStyles(styles.modalContainerSourceBody)}>
+                <iframe title="Source Resume" src={activeSource} height="80%" width="95%" />
+            </div>
+        </Modal>
         <Modal
             titleAriaId={confirmTitleId}
             isOpen={isModalOpenConfirm}
@@ -622,9 +646,15 @@ export function Component(): JSX.Element {
                         </ul></li>
                     <li>Select the resumes to upload and click upload.</li>
                     <li>Once the resumes are staged. Index the resumes. <i>Indexing can take a few minutes.</i>
-                        <ul><li> Do <b>not</b> leave the page. This can interrupt the process.</li></ul></li>
-                    <li>Once the resumes are indexed. Enter the job description and click submit.</li>
-                    <li>View the results.</li>
+                        <ul>
+                            <li> Do <b>not</b> leave the page. This can interrupt the process.</li>
+                        </ul>
+                    </li>
+                    <li>Enter the job description or use the one that is provided.</li>
+                    <li>Update the Skill Finding Prompt to extract skills from the job description and run it.</li>
+                    <li>Search the resumes for the relevant skills and view the relevant resumes.</li>
+                    <li>Update the prompt for comparing the relevant resumes to the job description.</li>
+                    <li>View the Azure OpenAI recommendations for the relevant resumes.</li>
                 </ol>
                 <small><b>Note:</b> Data used in this example has been generated using Azure Open AI and public sources. No real PII should be used or exposed in this example.</small>
             </div>

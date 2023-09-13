@@ -54,6 +54,5 @@ class docSearchApproach(Approach):
         retVal = ""
         # Get the results
         for res in result:
-            print("Search Content Found")
             retVal += res["content"]
         return retVal

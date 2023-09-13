@@ -74,6 +74,7 @@ blob_client = BlobServiceClient(
     account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net", 
     credential=azure_credential)
 blob_container = blob_client.get_container_client(AZURE_STORAGE_CONTAINER)
+blob_full_container = blob_client.get_container_client(AZURE_IDX_RESUME_FULL_CONTAINER)
 
 # Various approaches to integrate GPT and external knowledge, most applications will use a single one of these patterns
 # or some derivative, here we include several for exploration purposes
@@ -137,7 +138,8 @@ def static_file(path):
 # can access all the files. This is also slow and memory hungry.
 @app.route("/content/<path>")
 def content_file(path):
-    blob = blob_container.get_blob_client(path).download_blob()
+    print("content_file: " + path)
+    blob = blob_full_container.get_blob_client(path).download_blob()
     if not blob.properties or not blob.properties.has_key("content_settings"):
         abort(404)
     mime_type = blob.properties["content_settings"]["content_type"]
@@ -419,7 +421,8 @@ def resumeJDCompare():
     presence_penalty=request.json["presence_penalty"]
     
     r = impl.runLarge(prompt, resumeFullText, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
-    sys.stdout.write("resumeJDCompare: " + str(r))
+    r.source = f'/content/{resumeName}'
+    sys.stdout.write("resumeJDCompare: \n" + str(r))
     sys.stdout.flush()
     return jsonify(r), 200
 
