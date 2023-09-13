@@ -77,3 +77,14 @@ export type skillTerm = {
     searchSkill: string;
     score: number;
   }
+
+  export type resumeJDCompareReq = {
+    prompt: string;
+    resumeName: string;
+    jobDesc: string;
+    temperature: number;
+    top_p: number;
+    frequency_penalty: number;
+    presence_penalty: number;
+    maxTokens: number;
+  }

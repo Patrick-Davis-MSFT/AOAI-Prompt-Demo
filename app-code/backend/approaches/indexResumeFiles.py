@@ -115,14 +115,14 @@ class indexResumeFiles():
             index = SearchIndex(
                 name=self.cognitiveSearchIndex,
                 fields=[
-                    SimpleField(name="id", type="Edm.String", key=True),
+                    SimpleField(name="id", type="Edm.String", key=True, sortable=True),
                     SearchableField(name="content", type="Edm.String", analyzer_name="en.microsoft"),
                     SearchField(name="embedding", type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
                                 hidden=False, searchable=True, filterable=False, sortable=False, facetable=False,
                                 vector_search_dimensions=1536, vector_search_configuration="default"),
-                    SimpleField(name="category", type="Edm.String", filterable=True, facetable=True),
-                    SimpleField(name="sourcepage", type="Edm.String", filterable=True, facetable=True),
-                    SimpleField(name="sourcefile", type="Edm.String", filterable=True, facetable=True)
+                    SimpleField(name="category", type="Edm.String", filterable=True, facetable=True, sortable=True),
+                    SimpleField(name="sourcepage", type="Edm.String", filterable=True, facetable=True, sortable=True),
+                    SimpleField(name="sourcefile", type="Edm.String", filterable=True, facetable=True, sortable=True)
                 ],
                 semantic_settings=SemanticSettings(
                     configurations=[SemanticConfiguration(

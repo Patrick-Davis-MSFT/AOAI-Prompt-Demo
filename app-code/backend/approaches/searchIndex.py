@@ -42,17 +42,18 @@ class docSearchApproach(Approach):
         
         return retVal
 
-        if len(result) > 0:
-            top_result = result[0]
-            # Get the top result's source page
-            source_page = top_result[self.sourcepage_field]
-            # Get the top result's content
-            content = top_result[self.content_field]
-            # Get the top result's source file
-            source_file = top_result[self.sourcefile_field]
-            # Get the top result's score
-            score = top_result["@search.score"]
-            # Return the top result's source page, content, source file, score
-            return source_page, content, source_file, score
-        else:
-            return None, None, None, None, None, None
+    def getFullText(self, documentName:str, azure_credential):
+        # Get the top 3 results from the index
+        
+        filter_param = "sourcefile eq '" + documentName + "'"
+        order_by_param = "sourcepage asc"
+
+        search_client = SearchClient(endpoint=f"https://{self.searchService}.search.windows.net/", index_name=self.searchIndex, credential=azure_credential)
+        result = search_client.search(search_text="*", query_type=QueryType.full, top=4, filter=filter_param, order_by=order_by_param)
+        
+        retVal = ""
+        # Get the results
+        for res in result:
+            print("Search Content Found")
+            retVal += res["content"]
+        return retVal

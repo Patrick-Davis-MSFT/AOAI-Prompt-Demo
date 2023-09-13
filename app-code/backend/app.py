@@ -390,7 +390,36 @@ def jobDescSkillsApi():
     frequency_penalty=request.json["frequency_penalty"]
     presence_penalty=request.json["presence_penalty"]
     r = impl.runLarge(prompt,usrMessage, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
-    sys.stdout.write("openboxApi: " + str(r))
+    sys.stdout.write("jobDescSkillsApi: " + str(r))
+    sys.stdout.flush()
+    return jsonify(r), 200
+
+@app.route("/resumeJDCompare", methods=["POST"])
+def resumeJDCompare():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+
+
+
+    resumeName = request.json["resumeName"]
+    searchApproach = "dsa"
+    search = docSearch_approach.get(searchApproach)
+    resumeFullText = search.getFullText(resumeName, azure_credential)
+
+    approach = request.json["approach"]
+    maxTokens = request.json["maxTokens"]
+    impl = openbox_full_text_approaches.get(approach)
+    prompt=request.json["prompt"] 
+    usrDoc = request.json["jobDesc"]
+    prompt = prompt + "\n\n The Job Description is below: \n\n" + usrDoc
+    temperature=request.json["temperature"]
+    top_p=request.json["top_p"]
+    frequency_penalty=request.json["frequency_penalty"]
+    presence_penalty=request.json["presence_penalty"]
+    
+    r = impl.runLarge(prompt, resumeFullText, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
+    sys.stdout.write("resumeJDCompare: " + str(r))
     sys.stdout.flush()
     return jsonify(r), 200
 

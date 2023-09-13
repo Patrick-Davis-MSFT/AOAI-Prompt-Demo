@@ -1,5 +1,5 @@
 import { Text, ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, List, Modal, Overlay, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles, CommandButton, TextField } from "@fluentui/react";
-import { OpenBoxOpts, ReadyFile, SearchTermOpts, callClearData, callOpenBox, callSearchDocs, calljdSeachTerms, getReadyFiles, indexReadyFiles, removeStagedFile, searchDocumentTerms, searchDocumentTermsResponse, skillTerm, streamToBlob, uploadBlob } from "../../api";
+import { OpenBoxOpts, ReadyFile, SearchTermOpts, callClearData, callOpenBox, callSearchDocs, calljdSeachTerms, callResumeJD, getReadyFiles, indexReadyFiles, removeStagedFile, resumeJDCompareReq, searchDocumentTerms, searchDocumentTermsResponse, skillTerm, streamToBlob, uploadBlob } from "../../api";
 import { TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { useId, useBoolean } from '@fluentui/react-hooks';
 
@@ -36,13 +36,13 @@ export function Component(): JSX.Element {
         "Do not include any other information. \n " +
         "If there are less than five skills that are important return an array of only those skills. \n " +
         "If there are no skills that are important return an empty array. ###";
-    var resumeCompareJDPromptTXT: string = "### The User is sending a Job Description formatted with Markdown. \n " +
-    ' Compare the resume to the that follows and return a score between 1 and 10.' + 
-    ' for how well the resume matches the job description. \n ' +
-    ' Start the response with the name and contact email supplied in the resume. \n ' +
-    ' The score should be returned as a single number between 1 and 10. \n ' +
-    ' Also provide a brief explanation of why the score was given. ' + 
-    ' Respond only with plan text in English. ### \n ';
+    var resumeCompareJDPromptTXT: string = "### Provided below is a Job Description formatted with Markdown. The User is sending a resume in plain text.  \n " +
+        ' Start the response with the name and contact email supplied in the resume. \n ' +
+        ' Then compare the resume to the Job Description and return a score between 1 and 10' +
+        ' for how well the resume matches the job description. \n ' +
+        ' The score should be returned as a single number between 1 and 10. \n ' +
+        ' Also provide a brief explanation of why the score was given. ' +
+        ' Respond only with plain text in English. ### \n ';
     var maxTokensInit: number = 15000;
     var maxTokensAllowed: number = 15000;
     var chatLogo = () => {
@@ -73,6 +73,7 @@ export function Component(): JSX.Element {
     const [streamOutput, setStreamOutput] = useState<string>("");
     const [jdValue, setJdValue] = useState<string>(JobDescription);
     const [docResponse, setDocResponse] = useState<searchDocumentTermsResponse[]>([]);
+    const [aoaiResumeRecResp, setAOAIResumeRecResp] = useState<AOAIResult[]>([]);
 
     const updateJD = (value?: string | undefined, event?: ChangeEvent<HTMLTextAreaElement>) => {
         setJdValue(value || "");
@@ -98,7 +99,40 @@ export function Component(): JSX.Element {
         console.log(data);
     }
 
+    const compareResumeJD = () => {
+        setAOAIResumeRecResp([]);
+        compareResumeJDCall();
+    }
 
+    const compareResumeJDCall = async () => {
+        setIsLoading(true);
+
+        //consolidate resumes into a single list
+        var resumes = new Array();
+        docResponse.forEach((doc: searchDocumentTermsResponse) => {
+            if (resumes.indexOf(doc.document) === -1) {
+                resumes.push(doc.document);
+            }
+        });
+        resumes.forEach(async (resume: string) => {
+            const compareResumeJD: resumeJDCompareReq = {
+                prompt: resumeJDComparePrompt,
+                resumeName: resume,
+                jobDesc: jdValue,
+                temperature: temperature / 10,
+                top_p: top_p / 10,
+                frequency_penalty: frequencyPenalty / 10,
+                presence_penalty: presencePenalty / 10,
+                maxTokens: maxTokens
+            };
+            const response = await callResumeJD(compareResumeJD);
+            const data = await response;
+            console.log(data);
+            setAOAIResumeRecResp((aoaiResumeRecResp) => [...aoaiResumeRecResp, data]);
+        });
+        setIsLoading(false);
+
+    }
 
 
     const searchResumes = () => {
@@ -142,7 +176,7 @@ export function Component(): JSX.Element {
                 data.forEach((doc: searchDocumentTermsResponse) => {
                     setDocResponse((docResponse) => [...docResponse, doc]);
                 });
-                
+
                 setIsLoading(false);
             });
         }
@@ -195,7 +229,7 @@ export function Component(): JSX.Element {
     const [uploadIndexDisabled, setUploadIndexDisabled] = useState<boolean>(false); //disable index button
 
     const toggleIsOverlayVisible = () => {
-        window.scrollTo(0,0);
+        window.scrollTo(0, 0);
         toggleIsOverlayVisible2();
 
     }
@@ -345,6 +379,17 @@ export function Component(): JSX.Element {
         </>)
     }
 
+    const onRenderRecResults = (item?: AOAIResult, index?: number | undefined): JSX.Element | null => {
+        if (!item) return null;
+        return (<>
+            <div className={mergeStyles(styles.docRetItemContainer)}>
+                <span className={mergeStyles(styles.docRetItemSpan)}>
+                    <GenericAOAIResult input={item} boxTitle={"AOAI Resume Recommendation #" + index} hideTitle={true} />
+                </span>
+            </div>
+        </>);
+    }
+
     return (<div className={styles.container}>
         <div className={styles.commandsContainer}>
             <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
@@ -435,7 +480,7 @@ export function Component(): JSX.Element {
                 </Stack.Item>
                 <Stack.Item grow={2}>
                     <h2>Step 3 - 2. Output from Skilling</h2>
-                    {gotSkillTermsResult && !isLoading ? <GenericAOAIResult input={aoaiSkillTermsResponse} boxTitle={"Azure Open AI Result"} hideTitle={true}/> : <></>}
+                    {gotSkillTermsResult && !isLoading ? <GenericAOAIResult input={aoaiSkillTermsResponse} boxTitle={"Azure OpenAI Result"} hideTitle={true} /> : <></>}
                 </Stack.Item>
             </Stack>
         </Stack>
@@ -471,7 +516,7 @@ export function Component(): JSX.Element {
                         defaultText={resumeJDComparePrompt}
                         onChange={onResumeJDComparePrompt}
                     />
-                    <DefaultButton disabled={isLoading} onClick={makeSearchTermRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
+                    <DefaultButton disabled={isLoading} onClick={compareResumeJD}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
 
                 </Stack.Item>
             </Stack>
@@ -479,18 +524,11 @@ export function Component(): JSX.Element {
         <Stack enableScopedSelectors tokens={bodyStackTokens}>
             <Stack enableScopedSelectors horizontal>
                 <Stack.Item grow={1}>
-                    <h2>Azure Open AI Recommendations</h2>
-                    <BigInput
-                        disabled={false}
-                        placeholder={obPromptlbl}
-                        areaLabel={obPromptlbl}
-                        defaultText={searchTermPrompt}
-                        onChange={onOpenBoxPromptChange}
-                    />
+                    <h2>Azure OpenAI Recommendations</h2>
+                    <List items={aoaiResumeRecResp} onRenderCell={onRenderRecResults} />
                 </Stack.Item>
             </Stack>
         </Stack>
-        {gotSkillTermsResult && !isLoading ? <GenericAOAIResult input={aoaiSkillTermsResponse} /> : <></>}
         {isOverlayVisible && (
             <Overlay className={mergeStyles(styles.overlay)}>
                 <Stack enableScopedSelectors>
