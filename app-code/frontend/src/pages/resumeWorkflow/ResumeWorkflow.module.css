@@ -138,5 +138,24 @@ vertical-align: middle;
     border-top: 1px solid #000;
     margin: 10px; /* For vertical spacing */
     display:block;
-    width: 100%;
+    width: 99%;
+ }
+
+ .docRetContainer {
+    overflow: auto;
+    max-height: 20em;
+    border: 1px solid #CCC;
+    margin-top: 20;
+    line-height: 25px;
+ }
+ .docRetItemContainer:first{
+    border: 0 !important;
+    padding: 0;
+    line-height: .5em;
+ }
+ .docRetItemContainer{
+    border-top: 1px solid #919191 !important;
+    padding: 0;
+    line-height: .5em;
+ 
  }

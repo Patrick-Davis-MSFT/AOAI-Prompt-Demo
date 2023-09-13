@@ -8,11 +8,13 @@ import { WhiteBoxModel } from '../WhiteBox/WhiteBox';
 
 interface Props {
     input: AOAIResult;
+    boxTitle?: string;
+    hideTitle?: boolean;
 }
 
 export var aoaiValue: string = "";
 
-export const GenericAOAIResult = ({ input }: Props) => {
+export const GenericAOAIResult = ({ input, boxTitle, hideTitle }: Props) => {
 
     const verticalGapStackTokens: IStackTokens = {
         childrenGap: 10,
@@ -34,11 +36,11 @@ export const GenericAOAIResult = ({ input }: Props) => {
     aoaiValue = input.choices[0].message &&  input.choices[0].message.content?  input.choices[0].message.content :  input.choices[0].text;
 
     return (<div className={styles.resultWrapper}>
-        <h2>Azure Open AI Result</h2>
+        {hideTitle ? <></> : <h2>Azure Open AI Result</h2>}
         {input.choices.map((curr: aoaiChoices, idx) => {
             return (<>
                 <Stack enableScopedSelectors className={mergeStyles(styles.inputContainer, stackStyles)} tokens={verticalGapStackTokens}>
-                    <Stack.Item><Field label="Response" className={styles.inputTextArea}>
+                    <Stack.Item><Field label={boxTitle ? boxTitle : "Response"} className={styles.inputTextArea}>
                         <Textarea className={styles.editArea}
                             resize="both"
                             size="large">{curr.message && curr.message.content? curr.message.content : curr.text}</Textarea>
