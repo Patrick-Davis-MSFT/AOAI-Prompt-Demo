@@ -101,6 +101,7 @@ export function Component(): JSX.Element {
 
     const compareResumeJD = () => {
         if (docResponse.length === 0) { alert("Please run the search resumes prompt first."); return; }
+
         setAOAIResumeRecResp([]);
         compareResumeJDCall();
     }
@@ -130,8 +131,9 @@ export function Component(): JSX.Element {
             const data = await response;
             console.log(data);
             setAOAIResumeRecResp((aoaiResumeRecResp) => [...aoaiResumeRecResp, data]);
+            setIsLoading(false);
+
         });
-        setIsLoading(false);
 
     }
 
@@ -506,9 +508,10 @@ export function Component(): JSX.Element {
                 </Stack.Item>
                 <Stack.Item grow={3}>
                     <h2>Step 4 - 2. Resumes returned</h2>
-                    <div className={styles.docRetContainer} data-is-scrollable>
-                        <List items={docResponse} onRenderCell={onRenderCellDocs} />
-                    </div>
+                    {!docResponse || docResponse.length == 0 ? <></> :
+                        <div className={styles.docRetContainer} data-is-scrollable>
+                            <List items={docResponse} onRenderCell={onRenderCellDocs} />
+                        </div>}
                 </Stack.Item>
             </Stack>
         </Stack>
@@ -531,14 +534,16 @@ export function Component(): JSX.Element {
                 </Stack.Item>
             </Stack>
         </Stack>
-        <Stack enableScopedSelectors tokens={bodyStackTokens}>
-            <Stack enableScopedSelectors horizontal>
-                <Stack.Item grow={1}>
-                    <h2>Azure OpenAI Recommendations</h2>
-                    <List items={aoaiResumeRecResp} onRenderCell={onRenderRecResults} />
-                </Stack.Item>
+        {!aoaiResumeRecResp || aoaiResumeRecResp.length == 0 ? <></> :
+            <Stack enableScopedSelectors tokens={bodyStackTokens}>
+                <Stack enableScopedSelectors horizontal>
+                    <Stack.Item grow={1}>
+                        <h2>Azure OpenAI Recommendations</h2>
+                        <List items={aoaiResumeRecResp} onRenderCell={onRenderRecResults} />
+                    </Stack.Item>
+                </Stack>
             </Stack>
-        </Stack>
+        }
         {isOverlayVisible && (
             <Overlay className={mergeStyles(styles.overlay)}>
                 <Stack enableScopedSelectors>
@@ -557,6 +562,11 @@ export function Component(): JSX.Element {
             containerClassName={mergeStyles(styles.modalContainerSource)}
             dragOptions={isDraggable ? dragOptions : undefined}>
             <div className={mergeStyles(styles.modalHeader, styles.modalHeaderSource)}>
+            <IconButton
+                styles={iconButtonStyles}
+                iconProps={cancelIcon}
+                ariaLabel="Close confirm modal"
+                onClick={hideModalSource} />
                 <h2>Resume Source Document</h2>
             </div>
             <div className={mergeStyles(styles.modalContainerSourceBody)}>
