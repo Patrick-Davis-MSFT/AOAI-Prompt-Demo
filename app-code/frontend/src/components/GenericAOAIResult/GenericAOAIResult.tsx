@@ -10,6 +10,7 @@ interface Props {
     input: AOAIResult;
 }
 
+export var aoaiValue: string = "";
 
 export const GenericAOAIResult = ({ input }: Props) => {
 
@@ -29,6 +30,9 @@ export const GenericAOAIResult = ({ input }: Props) => {
             padding: 5,
         },
     };
+
+    aoaiValue = input.choices[0].message &&  input.choices[0].message.content?  input.choices[0].message.content :  input.choices[0].text;
+
     return (<div className={styles.resultWrapper}>
         <h2>Azure Open AI Result</h2>
         {input.choices.map((curr: aoaiChoices, idx) => {

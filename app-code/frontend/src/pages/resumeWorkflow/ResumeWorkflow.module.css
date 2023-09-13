@@ -132,3 +132,11 @@ vertical-align: middle;
     flex-direction: column-reverse;
     font-size: medium;
  }
+
+ .divider {
+    border: 0 solid #000 ;
+    border-top: 1px solid #000;
+    margin: 10px; /* For vertical spacing */
+    display:block;
+    width: 100%;
+ }

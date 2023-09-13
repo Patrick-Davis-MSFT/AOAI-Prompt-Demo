@@ -19,6 +19,7 @@ from approaches.summaryFullText import summaryFullText
 from approaches.openBoxFullText import openBoxFullText
 from approaches.textCompare import textCompare
 from approaches.indexResumeFiles import indexResumeFiles
+from approaches.searchIndex import docSearchApproach
 from azure.storage.blob import BlobServiceClient
 
 # Replace these with your own values, either in environment variables or directly here
@@ -112,6 +113,14 @@ indexResumeFiles_approaches = {
                             AZURE_SEARCH_INDEX, 
                             AZURE_OPENAI_EMB_DEPLOYMENT, 
                             AZURE_OPENAI_SERVICE)
+}
+
+docSearch_approach = {
+    "dsa": docSearchApproach(AZURE_SEARCH_SERVICE,
+                            AZURE_SEARCH_INDEX, 
+                            "sourcepage",
+                            "content", 
+                            "sourcefile")
 }
 
 app = Flask(__name__)
@@ -382,6 +391,29 @@ def jobDescSkillsApi():
     sys.stdout.write("openboxApi: " + str(r))
     sys.stdout.flush()
     return jsonify(r), 200
+
+@app.route("/searchDocs", methods=["POST"])
+def searchDocsWCog():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+
+    sys.stdout.write("searchDocs: " + str(request.json))
+    sys.stdout.flush()
+    approach = "dsa"
+    maxTokens = request.json["maxTokens"]
+    impl = docSearch_approach.get(approach)
+    searchSkill = request.json["searchSkill"] 
+    searchTerm = request.json["searchTerm"]
+    temperature = request.json["temperature"]
+    top_p = request.json["top_p"]
+    frequency_penalty = request.json["frequency_penalty"]
+    presence_penalty = request.json["presence_penalty"]
+    r = impl.run(searchTerm, searchSkill, azure_credential)
+    sys.stdout.write("searchDocs: " + str(r))
+    sys.stdout.flush()
+    return jsonify(r), 200
+
 
 def ensure_openai_token():
     global openai_token

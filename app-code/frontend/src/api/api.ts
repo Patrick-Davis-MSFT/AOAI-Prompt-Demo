@@ -1,5 +1,5 @@
 import { AOAIResult, aoaiChoices } from "../components/GenericAOAIResult";
-import { Indexes, OpenBoxCompareOpts, OpenBoxOpts, ReadyFiles, SearchTermOpts, SummaryOpts, SummaryResponse } from "./models";
+import { Indexes, OpenBoxCompareOpts, OpenBoxOpts, ReadyFiles, SearchTermOpts, SummaryOpts, SummaryResponse, searchDocumentTerms, searchDocumentTermsResponse } from "./models";
 import { FileContent } from "use-file-picker";
 
 export async function callSummary(options: SummaryOpts): Promise<AOAIResult> {
@@ -184,6 +184,54 @@ export async function calljdSeachTerms(options: SearchTermOpts): Promise<AOAIRes
             message: { role: choice.message.role, content: choice.message.content }
         });
     });
+
+    return retVal;
+}
+
+export async function callSearchDocs(options: searchDocumentTerms): Promise<searchDocumentTermsResponse> {
+    console.log("Calling searchDocs");
+    console.log(options);
+    const response = await fetch(`/searchDocs`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            searchTerm: options.searchTerm,
+            searchSkill: options.searchSkill,
+            temperature: options.temperature,
+            top_p: options.top_p,
+            frequency_penalty: options.frequency_penalty,
+            presence_penalty: options.presence_penalty,
+            approach: "dsa", //options.approach,
+            maxTokens: options.maxTokens,
+        }),
+    });
+    const json = await response.json();
+    var retVal = {} as searchDocumentTermsResponse;
+    console.log("json: ");
+    console.log(json);
+    /*retVal = {
+        created: json.created,
+        id: json.id,
+        model: json.model,
+        object: json.object,
+        usage: {
+            completion_tokens: json.usage.completion_tokens,
+            prompt_tokens: json.usage.prompt_tokens,
+            total_tokens: json.usage.total_tokens
+        },
+        choices: new Array<aoaiChoices>()
+    };
+    json.choices.forEach((choice: any) => {
+        retVal.choices.push({
+            finish_reason: choice.finish_reason,
+            index: choice.index,
+            logprobs: choice.logprobs,
+            text: choice.text,
+            message: { role: choice.message.role, content: choice.message.content }
+        });
+    });*/
 
     return retVal;
 }

@@ -54,3 +54,26 @@ export type SearchTermOpts = {
     maxTokens: number;
 }
 export type ReadyFiles = ReadyFile[];
+
+export type skillTerm = {
+    skill: string;
+    term: string;
+  }
+
+  export type searchDocumentTerms = {
+    searchTerm: string;
+    searchSkill: string;
+    temperature: number;
+    top_p: number;
+    frequency_penalty: number;
+    presence_penalty: number;
+    maxTokens: number;
+  }
+
+  export type searchDocumentTermsResponse = {
+    document: string;
+    documentPage: string;
+    searchTerm: string;
+    searchSkill: string;
+    score: number;
+  }

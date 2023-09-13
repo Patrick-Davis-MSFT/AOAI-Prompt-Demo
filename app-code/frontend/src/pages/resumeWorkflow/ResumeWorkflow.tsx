@@ -1,5 +1,5 @@
 import { Text, ContextualMenu, DefaultButton, FontWeights, IButtonStyles, IDragOptions, IIconProps, IStackProps, IStackTokens, IconButton, List, Modal, Overlay, Panel, SpinButton, Stack, getTheme, initializeIcons, mergeStyleSets, mergeStyles, CommandButton, TextField } from "@fluentui/react";
-import { OpenBoxOpts, ReadyFile, SearchTermOpts, callClearData, callOpenBox, calljdSeachTerms, getReadyFiles, indexReadyFiles, removeStagedFile, streamToBlob, uploadBlob } from "../../api";
+import { OpenBoxOpts, ReadyFile, SearchTermOpts, callClearData, callOpenBox, callSearchDocs, calljdSeachTerms, getReadyFiles, indexReadyFiles, removeStagedFile, searchDocumentTerms, skillTerm, streamToBlob, uploadBlob } from "../../api";
 import { TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { useId, useBoolean } from '@fluentui/react-hooks';
 
@@ -23,18 +23,19 @@ export function Component(): JSX.Element {
     var openBoxTitle: string = "Resume Workflow";
     var obPromptlbl: string = "Open Box Prompt";
     var searchTermPromptTXT: string = "### The User is sending a Job Description formatted with Markdown. Find the top five skills and search terms that an applicant would need to perform the job successfully according to the job description provided. \n " +
-    " Respond first with a JavaScript Array of Objects. Only use information noted in the job description and no where else. \n " + 
-    " Order the skills from most important to least important. \n\n" + 
-    " Format your answers in a javascript string array of objects in the structure {'Skill': 'value', 'Search Term': 'value'} such as \n" + 
-    "```\n const topSkills = [{'First Skill': 'value', 'First Search Term': 'value' },  \n " + 
-    "{'Second Skill': 'value', 'Second Search Term': 'value' }, \n " + 
-    "{'Third Skill', 'Third Search Term': 'value' }, \n " + 
-    "{'Fourth Skill': 'value', 'Fourth Search Term': 'value' }, \n " + 
-    "{'Fifth Skill': 'value', 'Fifth Search Term': 'value' }] \n``` \n\n " + 
-    "Replace value with the skill or the search term. \n " + 
-    "Do not include any other information. \n " + 
-    "If there are less than five skills that are important return an array of only those skills. \n " + 
-    "If there are no skills that are important return an empty array. ###";
+        " Respond first with a JavaScript Array of Objects. Only use information noted in the job description and no where else. \n " +
+        " Order the skills from most important to least important. \n\n" +
+        ' Format your answers in a javascript string array of objects in the structure {"skill": "value", "term": "value" } where as the skill ' + 
+        'is the skill from the document and the term is 4 or more generated search keywords in a single string. The result should be returned such as \n' +
+        '```\n const topSkills = [{"skill": "value", "term": "value" },  \n ' +
+        '{"skill": "value", "term": "value" }, \n ' +
+        '{"skill": "value", "term": "value" }, \n ' +
+        '{"skill": "value", "term": "value" }, \n ' +
+        '{"skill": "value", "term": "value" }] \n``` \n\n ' +
+        "Replace value with the skill or the search term. \n " +
+        "Do not include any other information. \n " +
+        "If there are less than five skills that are important return an array of only those skills. \n " +
+        "If there are no skills that are important return an empty array. ###";
     var maxTokensInit: number = 15000;
     var maxTokensAllowed: number = 15000;
     var chatLogo = () => {
@@ -88,6 +89,47 @@ export function Component(): JSX.Element {
         console.log(data);
     }
 
+
+  
+      
+
+    const searchResumes = async () => {
+        if (aoaiSkillTermsResponse && aoaiSkillTermsResponse.choices && aoaiSkillTermsResponse.choices[0].message && aoaiSkillTermsResponse.choices[0].message.content) {
+        setIsLoading(true);
+        var searchTerms: skillTerm[];
+        try{
+            var searchTermPrompt = aoaiSkillTermsResponse.choices[0].message.content;
+            const startIndex = searchTermPrompt.indexOf("[");
+            const endIndex = searchTermPrompt.indexOf("]") + 1;
+            const formattedSearch = searchTermPrompt.substring(startIndex, endIndex);
+            console.log(formattedSearch);
+            searchTerms = JSON.parse(formattedSearch);
+        }
+        catch (error: any) {
+            console.log(error);
+            alert(`An error occurred: ${error.message}`);
+            setIsLoading(false);
+            return;
+        }
+        searchTerms.forEach(async (term: skillTerm) => {
+console.log("term")
+            console.log(term);
+            const searchDocuments: searchDocumentTerms = {
+                searchTerm: term.term,
+                searchSkill: term.skill,
+                temperature: temperature / 10,
+                top_p: top_p / 10,
+                frequency_penalty: frequencyPenalty / 10,
+                presence_penalty: presencePenalty / 10,
+                maxTokens: maxTokens
+            }
+            const response = await callSearchDocs(searchDocuments);
+            const data = await response;
+        });
+        }
+        else {alert ("Please run the skill finding prompt first.")}
+    }
+
     const onOpenBoxPromptChange = (ev: ChangeEvent<HTMLTextAreaElement>, newValue: TextareaOnChangeData) => {
         setSearchTermPrompt(newValue.value || "");
     };
@@ -113,9 +155,9 @@ export function Component(): JSX.Element {
 
     const sectionStackTokens: IStackTokens = { childrenGap: 10, padding: 10 };
     const headingStackTokens: IStackTokens = { childrenGap: 50 };
-    const bodyStackTokens: IStackTokens = { childrenGap: 25, padding: 10 };
+    const bodyStackTokens: IStackTokens = { childrenGap: 25, padding: 10, };
     const confirmBtnStackTokens: IStackTokens = { childrenGap: 5, padding: 10 };
-    const bodyStackSecondRowFirstCol: IStackTokens = {  };
+    const bodyStackSecondRowFirstCol: IStackTokens = {};
 
 
     const [isModalOpen, { setTrue: showModal, setFalse: hideModal }] = useBoolean(false);
@@ -329,9 +371,10 @@ export function Component(): JSX.Element {
                 </Stack.Item>
             </Stack>
         </Stack>
-        <Stack enableScopedSelectors  tokens={bodyStackTokens}>
+        <hr className={styles.divider}></hr>
+        <Stack enableScopedSelectors tokens={bodyStackTokens}>
             <Stack enableScopedSelectors horizontal>
-            <Stack.Item grow={1}>
+                <Stack.Item grow={1}>
                     <h2>Step 3 - 1. Skill Finding Prompt</h2>
                     <BigInput
                         disabled={false}
@@ -344,15 +387,23 @@ export function Component(): JSX.Element {
 
                 </Stack.Item>
                 <Stack.Item grow={2}>
-                <h2>Step 3 - 2. Output from Skilling</h2>
-                {gotSkillTermsResult && !isLoading ? <GenericAOAIResult input={aoaiSkillTermsResponse} /> : <></>}
+                    <h2>Step 3 - 2. Output from Skilling</h2>
+                    {gotSkillTermsResult && !isLoading ? <GenericAOAIResult input={aoaiSkillTermsResponse} /> : <></>}
                 </Stack.Item>
             </Stack>
         </Stack>
-        <Stack enableScopedSelectors  tokens={bodyStackTokens}>
+
+        <hr className={styles.divider}></hr>
+        <Stack enableScopedSelectors tokens={bodyStackTokens}>
             <Stack enableScopedSelectors horizontal>
-            <Stack.Item grow={1}>
+                <Stack.Item grow={1}>
                     <h2>Step 4 - 1. Search Resumes</h2>
+                    <p>Search resumes for the returned search terms from Azure OpenAI</p>
+                    <DefaultButton disabled={isLoading} onClick={searchResumes}>{isLoading ? (<>Loading...</>) : (<>Search Resumes</>)} </DefaultButton>
+
+                </Stack.Item>
+                <Stack.Item grow={2}>
+                    <h2>Step 4 - 2. Resumes returned</h2>
                     <BigInput
                         disabled={false}
                         placeholder={obPromptlbl}
@@ -360,24 +411,14 @@ export function Component(): JSX.Element {
                         defaultText={searchTermPrompt}
                         onChange={onOpenBoxPromptChange}
                     />
-                    <DefaultButton disabled={isLoading} onClick={makeSearchTermRequest}>{isLoading ? (<>Loading...</>) : (<>Submit Request</>)} </DefaultButton>
-
-                </Stack.Item>
-                <Stack.Item grow={2}>
-                <h2>Step 4 - 2. Resumes returned</h2>
-                <BigInput
-                    disabled={false}
-                    placeholder={obPromptlbl}
-                    areaLabel={obPromptlbl}
-                    defaultText={searchTermPrompt}
-                    onChange={onOpenBoxPromptChange}
-                />
                 </Stack.Item>
             </Stack>
         </Stack>
-        <Stack enableScopedSelectors  tokens={bodyStackTokens}>
+
+        <hr className={styles.divider}></hr>
+        <Stack enableScopedSelectors tokens={bodyStackTokens}>
             <Stack enableScopedSelectors horizontal>
-            <Stack.Item grow={1}>
+                <Stack.Item grow={1}>
                     <h2>Step 5. Comparison and Recommendation Prompt</h2>
                     <BigInput
                         disabled={false}
@@ -391,9 +432,9 @@ export function Component(): JSX.Element {
                 </Stack.Item>
             </Stack>
         </Stack>
-        <Stack enableScopedSelectors  tokens={bodyStackTokens}>
+        <Stack enableScopedSelectors tokens={bodyStackTokens}>
             <Stack enableScopedSelectors horizontal>
-            <Stack.Item grow={1}>
+                <Stack.Item grow={1}>
                     <h2>Azure Open AI Recommendations</h2>
                     <BigInput
                         disabled={false}
