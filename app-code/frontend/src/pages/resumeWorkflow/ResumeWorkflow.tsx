@@ -616,15 +616,15 @@ export function Component(): JSX.Element {
                 <h3>What it Does</h3>
                 <p>
                     This example is a demonstration of how to use the Azure OpenAI API to analyze resumes for a given job description.
-                    It uses Azure Open AI service, Azure Document Services and cognitive search to find the best matching resumes. This is
+                    It uses Azure OpenAI service, Azure Document Services and cognitive search to find the best matching resumes. This is
                     an example of a complex workflow that can be built using Azure OpenAI. Because of the complexity of this workflow this
                     page cannot be changed.
                 </p>
                 <h3>The Workflow</h3>
                 <p>
-                    The workflow starts with a job description. The job description is first summarized by Azure Open AI to produce a list
+                    The workflow starts with a job description. The job description is first summarized by Azure OpenAI to produce a list
                     of skills needed for the position. The job description is then sent to Azure Cognitive Search to find resumes that match
-                    the skills needed for the position. The resumes are then returned to Azure Open AI to compare with the job description and
+                    the skills needed for the position. The resumes are then returned to Azure OpenAI to compare with the job description and
                     give a score for each resume. The resumes are then sorted by scored and recommendations are returned to the user.
                 </p>
                 <h3>How to Use the Demo</h3>
@@ -656,7 +656,7 @@ export function Component(): JSX.Element {
                     <li>Update the prompt for comparing the relevant resumes to the job description.</li>
                     <li>View the Azure OpenAI recommendations for the relevant resumes.</li>
                 </ol>
-                <small><b>Note:</b> Data used in this example has been generated using Azure Open AI and public sources. No real PII should be used or exposed in this example.</small>
+                <small><b>Note:</b> Data used in this example has been generated using Azure OpenAI and public sources. No real PII should be used or exposed in this example.</small>
             </div>
         </Modal>
         <Panel
