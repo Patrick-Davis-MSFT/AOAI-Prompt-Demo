@@ -29,6 +29,7 @@ param backendServiceName string = ''
 param storageAccountName string = ''
 param storageResourceGroupLocation string = location
 param storageIdxResumeContainerName string = 'indexed-resumes'
+param storageIdxResumeFullContainerName string = 'indexed-resumes-full'
 param storageStgResumeContainerName string = 'stage-resumes'
 
 
@@ -136,7 +137,7 @@ module openAi 'components/ai/cognitiveservices.bicep' = {
         model: {
           format: 'OpenAI'
           name: largegptModelName
-          version: '0301'
+          version: '0613'
         }
         sku: {
           name: 'Standard'
@@ -209,6 +210,10 @@ module storage 'components/storage/storage-account.bicep' = {
         name: storageStgResumeContainerName
         publicAccess: 'None'
       }
+      {
+        name: storageIdxResumeFullContainerName
+        publicAccess: 'None'
+      }
     ]
   }
 }
@@ -256,6 +261,7 @@ module backend 'components/host/appservice.bicep' = {
       AZURE_OPENAI_LARGEGPT_DEPLOYMENT: largeGptDeploymentName
       AZURE_OPENAI_EMB_DEPLOYMENT: embeddingDeploymentName
       AZURE_OPENAI_LARGEGPT_MODEL: largegptModelName
+      AZURE_IDX_RESUME_FULL_CONTAINER: storageIdxResumeFullContainerName
     }
   }
 }
@@ -430,6 +436,7 @@ output AZURE_RESOURCE_GROUP string = rg.name
 output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output AZURE_IDX_RESUME_CONTAINER string = storageIdxResumeContainerName
 output AZURE_STG_RESUME_CONTAINER string = storageStgResumeContainerName
+output AZURE_IDX_RESUME_FULL_CONTAINER string = storageIdxResumeFullContainerName
 
 output BACKEND_URI string = backend.outputs.uri
 

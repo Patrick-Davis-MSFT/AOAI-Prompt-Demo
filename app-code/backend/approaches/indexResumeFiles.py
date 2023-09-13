@@ -33,10 +33,11 @@ from pypdf import PdfReader, PdfWriter
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 class indexResumeFiles():
-    def __init__(self, storageAcct:str, stagingContainer: str, indexContainer: str, formAnalyzer: str,formAnalyzerKey: str, cognitiveSearch: str, cognitiveSearchIndex: str, embDeployment: str, aoaiService: str):
+    def __init__(self, storageAcct:str, stagingContainer: str, indexContainer: str, indexFullContainer: str, formAnalyzer: str,formAnalyzerKey: str, cognitiveSearch: str, cognitiveSearchIndex: str, embDeployment: str, aoaiService: str):
         self.storageAcct = storageAcct
         self.stagingContainer = stagingContainer
         self.indexContainer = indexContainer
+        self.indexFullContainer = indexFullContainer
         self.formAnalyzer = formAnalyzer
         self.formAnalyzerKey = formAnalyzerKey
         self.cognitiveSearch = cognitiveSearch
@@ -61,6 +62,7 @@ class indexResumeFiles():
         blob_service_client = BlobServiceClient(account_url=f"https://" + self.storageAcct + ".blob.core.windows.net", credential=azure_credential)
         container_client = blob_service_client.get_container_client(self.stagingContainer)
         upload_client = blob_service_client.get_container_client(self.indexContainer)
+        upload_full_client = blob_service_client.get_container_client(self.indexFullContainer)
 
         self.printAPI.put("Generating Search Keys..." )
         openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
@@ -72,7 +74,7 @@ class indexResumeFiles():
         
         self.printAPI.put("Stage 1 Chunking...")
         # Split PDF files into pages
-        self.splitPDF(container_client, upload_client)
+        self.splitPDF(container_client, upload_client, upload_full_client)
 
         
         self.printAPI.put("Stage 2 Check Index...")
@@ -333,7 +335,7 @@ class indexResumeFiles():
         table_html += "</table>"
         return table_html
 
-    def splitPDF(self, staging_cc, search_cc) -> None:
+    def splitPDF(self, staging_cc, search_cc, full_cc) -> None:
         blobs = staging_cc.list_blobs()
         files = []
         
@@ -349,6 +351,7 @@ class indexResumeFiles():
                 # convert to pdf and split pages for pdf files
                 pdf = PdfReader(BytesIO(pdf_bytes))
                 pages = pdf.pages
+                full_cc.upload_blob(blob.name, pdf_bytes, overwrite=True)
                 for i in range(len(pages)):
                     blob_name = blob.name[:-len(".pdf")] + "-" + str(i) + ".pdf"
                     f = io.BytesIO()

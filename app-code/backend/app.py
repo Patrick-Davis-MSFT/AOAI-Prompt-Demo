@@ -36,6 +36,7 @@ AZURE_OPENAI_CHATGPT_MODEL = os.environ.get("AZURE_OPENAI_CHATGPT_MODEL") or "gp
 AZURE_OPENAI_EMB_DEPLOYMENT = os.environ.get("AZURE_OPENAI_EMB_DEPLOYMENT") or "embedding"
 AZURE_STG_RESUME_CONTAINER = os.environ.get("AZURE_STG_RESUME_CONTAINER") or "stage-resumes"
 AZURE_IDX_RESUME_CONTAINER = os.environ.get("AZURE_IDX_RESUME_CONTAINER") or "indexed-resumes"
+AZURE_IDX_RESUME_FULL_CONTAINER = os.environ.get("AZURE_IDX_RESUME_FULL_CONTAINER") or "indexed-resumes-full"
 AZURE_FORMRECOGNIZER_SERVICE = os.environ.get("AZURE_FORMRECOGNIZER_SERVICE") or "myformrecognizer"
 AZURE_FORMRECOGNIZER_KEY = os.environ.get("AZURE_FORMRECOGNIZER_KEY") or "myformrecognizerkey"
 
@@ -106,7 +107,8 @@ text_compare_approaches = {
 indexResumeFiles_approaches = {
     "irf": indexResumeFiles(AZURE_STORAGE_ACCOUNT,
                             AZURE_STG_RESUME_CONTAINER, 
-                            AZURE_IDX_RESUME_CONTAINER, 
+                            AZURE_IDX_RESUME_CONTAINER,
+                            AZURE_IDX_RESUME_FULL_CONTAINER, 
                             AZURE_FORMRECOGNIZER_SERVICE, 
                             AZURE_FORMRECOGNIZER_KEY, 
                             AZURE_SEARCH_SERVICE, 

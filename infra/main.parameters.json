@@ -6,7 +6,7 @@
         "value": "${AZURE_ENV_NAME}"
       },
       "resourceGroupName": {
-        "value": "${AZURE_LOCATION}"
+        "value": "${AZURE_RESOURCE_GROUP}"
       },
       "location": {
         "value": "${AZURE_LOCATION}"
@@ -33,7 +33,7 @@
         "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat}"
       },
       "largeGptDeploymentName": {
-        "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat16k}"
+        "value": "${AZURE_OPENAI_LARGEGPT_DEPLOYMENT=chat16k}"
       },
       "gptDeploymentName": {
         "value": "${AZURE_OPENAI_GPT_DEPLOYMENT=davinci}"
