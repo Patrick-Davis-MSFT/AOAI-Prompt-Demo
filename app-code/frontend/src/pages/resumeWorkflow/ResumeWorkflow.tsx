@@ -36,13 +36,17 @@ export function Component(): JSX.Element {
         "Do not include any other information. \n " +
         "If there are less than five skills that are important return an array of only those skills. \n " +
         "If there are no skills that are important return an empty array. ###";
-    var resumeCompareJDPromptTXT: string = "### Provided below is a Job Description formatted with Markdown. The User is sending a resume in plain text.  \n " +
-        ' Start the response with the name and contact email supplied in the resume. \n ' +
-        ' Then compare the resume to the Job Description and return a score between 1 and 10' +
-        ' for how well the resume matches the job description. \n ' +
-        ' The score should be returned as a single number between 1 and 10. \n ' +
-        ' Also provide a brief explanation of why the score was given. ' +
-        ' Respond only with plain text in English. ### \n ';
+    var resumeCompareJDPromptTXT: string = ' ### Provided below is a Job Description formatted with Markdown. ' + 
+    'The User is sending a resume in plain text.  \n' +
+    'Start the response with the name and contact email supplied in the resume in the format below, ' +
+    'replacing the request in the between the curly brackets { } with the requested information from the resume.  \n\n' +
+    'Applicant Name: {Name from Resume} \n' +
+    'Applicant Email: {Email from Resume} \n' +
+    'Applicant Phone: {Phone Number from Resume} \n\n' +  
+    'Then compare the resume to the Job Description and return a score between 1 and 10 for ' +
+    'how well the resume matches the job description. \n' +
+    'The score should be returned as a single number between 1 and 10. \n' +
+    'Also provide a brief explanation of why the score was given.  Respond only with plain text in English. ### ';
     var maxTokensInit: number = 15000;
     var maxTokensAllowed: number = 15000;
     var chatLogo = () => {
