@@ -496,7 +496,7 @@ export function Component(): JSX.Element {
                 </Stack.Item>
                 <Stack.Item grow={2}>
                     <h2>Step 3 - 2. Output from Skilling</h2>
-                    {gotSkillTermsResult && !isLoading ? <GenericAOAIResult input={aoaiSkillTermsResponse} boxTitle={"Azure OpenAI Result"} hideTitle={true} /> : <></>}
+                    {gotSkillTermsResult ? <GenericAOAIResult input={aoaiSkillTermsResponse} boxTitle={"Azure OpenAI Result"} hideTitle={true} /> : <></>}
                 </Stack.Item>
             </Stack>
         </Stack>
