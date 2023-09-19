@@ -13,7 +13,7 @@ import { WhiteBoxModel } from "../../components/WhiteBox/WhiteBox";
 import { AOAIResult, GenericAOAIResult } from "../../components/GenericAOAIResult";
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import JobDescription from "./jobDescription.md?raw"
+import JobDescription from "./jobDescription2.md?raw"
 
 import MDEditor from '@uiw/react-md-editor';
 
