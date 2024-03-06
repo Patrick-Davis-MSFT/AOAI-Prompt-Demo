@@ -36,39 +36,24 @@ param storageStgResumeContainerName string = 'stage-resumes'
 param formRecognizerServiceName string = ''
 param formRecognizerSkuName string = 'S0'
 
-param openAiServiceName string = ''
-param openAiResourceGroupName string = ''
-param openAiSkuName string = 'S0'
+param openAiServiceName string
+param openAiResourceGroupName string
 
 
 param searchServiceName string = ''
 param searchServiceSkuName string = 'standard'
 param searchIndexName string // Set in main.parameters.json
 
-@description('Location for the OpenAI resource group')
-@allowed(['eastus', 'francecentral', 'southcentralus', 'uksouth', 'westeurope'])
-@metadata({
-  azd: {
-    type: 'location'
-  }
-})
-param openAiResourceGroupLocation string
+
 
 
 param gptDeploymentName string // Set in main.parameters.json
-param gptDeploymentCapacity int = 30
-param gptModelName string = 'gpt-35-turbo'
 param chatGptDeploymentName string // Set in main.parameters.json
-param chatGptDeploymentCapacity int = 30
-param chatGptModelName string = 'gpt-35-turbo'
-param embeddingDeploymentName string = 'embedding'
-param embeddingDeploymentCapacity int = 30
-param embeddingModelName string = 'text-embedding-ada-002'
+param embeddingDeploymentName string
 
 
 param largeGptDeploymentName string // Set in main.parameters.json
-param largegptDeploymentCapacity int = 120
-param largegptModelName string = 'gpt-35-turbo-16k'
+param largegptModelName string
 
 
 @description('Id of the user or app to assign application roles')
@@ -100,74 +85,10 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-resource openAiResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(openAiResourceGroupName)) {
-  name: !empty(openAiResourceGroupName) ? openAiResourceGroupName : rg.name
+resource openAiResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
+  name: openAiResourceGroupName
 }
 
-// Add resources to be provisioned below.
-// A full example that leverages azd bicep modules can be seen in the todo-python-mongo template:
-// https://github.com/Azure-Samples/todo-python-mongo/tree/main/infra
-
-
-module openAi 'components/ai/cognitiveservices.bicep' = {
-  name: 'openai'
-  scope: openAiResourceGroup
-  params: {
-    name: !empty(openAiServiceName) ? openAiServiceName : '${abbrs.cognitiveServicesAccounts}${resourceToken}'
-    location: openAiResourceGroupLocation
-    tags: tags
-    sku: {
-      name: openAiSkuName
-    }
-    deployments: [
-      {
-        name: gptDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: gptModelName
-          version: '0301'
-        }
-        sku: {
-          name: 'Standard'
-          capacity: gptDeploymentCapacity
-        }
-      }
-      {
-        name: largeGptDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: largegptModelName
-          version: '0613'
-        }
-        sku: {
-          name: 'Standard'
-          capacity: largegptDeploymentCapacity
-        }
-      }
-      {
-        name: chatGptDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: chatGptModelName
-          version: '0301'
-        }
-        sku: {
-          name: 'Standard'
-          capacity: chatGptDeploymentCapacity
-        }
-      }
-      {
-        name: embeddingDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: embeddingModelName
-          version: '2'
-        }
-        capacity: embeddingDeploymentCapacity
-      }
-    ]
-  }
-}
 
 //Create Form Reconizer for PDF indexing
 module formRecognizer 'components/ai/documentrecog.bicep' = {
@@ -251,7 +172,7 @@ module backend 'components/host/appservice.bicep' = {
       AZURE_STORAGE_ACCOUNT: storage.outputs.name
       AZURE_IDX_RESUME_CONTAINER: storageIdxResumeContainerName
       AZURE_STG_RESUME_CONTAINER: storageStgResumeContainerName
-      AZURE_OPENAI_SERVICE: openAi.outputs.name
+      AZURE_OPENAI_SERVICE: openAiServiceName
       AZURE_FORMRECOGNIZER_SERVICE: formRecognizer.outputs.name
       AZURE_FORMRECOGNIZER_KEY: formRecognizer.outputs.accountKey
       AZURE_SEARCH_INDEX: searchIndexName
@@ -440,7 +361,7 @@ output AZURE_IDX_RESUME_FULL_CONTAINER string = storageIdxResumeFullContainerNam
 
 output BACKEND_URI string = backend.outputs.uri
 
-output AZURE_OPENAI_SERVICE string = openAi.outputs.name
+output AZURE_OPENAI_SERVICE string = openAiServiceName
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
 output AZURE_OPENAI_GPT_DEPLOYMENT string = gptDeploymentName
 output AZURE_OPENAI_LARGEGPT_DEPLOYMENT string = largeGptDeploymentName
