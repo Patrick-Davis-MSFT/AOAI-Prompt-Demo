@@ -85,9 +85,6 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-resource openAiResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
-  name: openAiResourceGroupName
-}
 
 
 //Create Form Reconizer for PDF indexing
@@ -208,15 +205,15 @@ module searchService 'components/search/search-services.bicep' = {
 }
 
 // USER ROLES
-module openAiRoleUser 'components/security/role.bicep' = {
-  scope: openAiResourceGroup
-  name: 'openai-role-user'
-  params: {
-    principalId: principalId
-    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-    principalType: 'User'
-  }
-}
+//module openAiRoleUser 'components/security/role.bicep' = {
+//  scope: openAiResourceGroupName
+//  name: 'openai-role-user'
+//  params: {
+//    principalId: principalId
+//    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+//    principalType: 'User'
+//  }
+//}
 
 module formRecognizerRoleUser 'components/security/role.bicep' = {
   scope: rg
@@ -279,15 +276,15 @@ module searchSvcContribRoleUser 'components/security/role.bicep' = {
 }
 
 // SYSTEM IDENTITIES
-module openAiRoleBackend 'components/security/role.bicep' = {
-  scope: openAiResourceGroup
-  name: 'openai-role-backend'
-  params: {
-    principalId: backend.outputs.identityPrincipalId
-    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-    principalType: 'ServicePrincipal'
-  }
-}
+// module openAiRoleBackend 'components/security/role.bicep' = {
+//   scope: openAiResourceGroup
+//   name: 'openai-role-backend'
+//   params: {
+//     principalId: backend.outputs.identityPrincipalId
+//     roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+//     principalType: 'ServicePrincipal'
+//   }
+// }
 
 module storageRoleBackend 'components/security/role.bicep' = {
   scope: rg
@@ -362,7 +359,7 @@ output AZURE_IDX_RESUME_FULL_CONTAINER string = storageIdxResumeFullContainerNam
 output BACKEND_URI string = backend.outputs.uri
 
 output AZURE_OPENAI_SERVICE string = openAiServiceName
-output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
+output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroupName
 output AZURE_OPENAI_GPT_DEPLOYMENT string = gptDeploymentName
 output AZURE_OPENAI_LARGEGPT_DEPLOYMENT string = largeGptDeploymentName
 output AZURE_OPENAI_LARGEGPT_MODEL string = largegptModelName
