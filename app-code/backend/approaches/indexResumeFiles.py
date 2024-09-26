@@ -279,7 +279,7 @@ class indexResumeFiles():
             }
             if use_vectors:
                 section["embedding"] = self.compute_embedding(content)
-                print(section["embedding"])
+                #print(section["embedding"])
             yield section
     
     def refresh_openai_token(self):
