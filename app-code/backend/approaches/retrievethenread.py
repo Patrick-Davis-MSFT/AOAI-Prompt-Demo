@@ -1,4 +1,4 @@
-import openai
+from openai import AzureOpenAI
 
 from approaches.approach import Approach
 from azure.search.documents import SearchClient
@@ -35,7 +35,8 @@ info4.pdf: In-network institutions include Overlake, Swedish and others in the r
 """
     answer = "In-network deductibles are $500 for employee and $1000 for family [info1.txt] and Overlake is in-network for the employee plan [info2.pdf][info4.pdf]."
 
-    def __init__(self, search_client: SearchClient, openai_deployment: str, chatgpt_model: str, embedding_deployment: str, sourcepage_field: str, content_field: str):
+    def __init__(self,aoai_client, search_client: SearchClient, openai_deployment: str, chatgpt_model: str, embedding_deployment: str, sourcepage_field: str, content_field: str):
+        self.aoai_client = aoai_client
         self.search_client = search_client
         self.openai_deployment = openai_deployment
         self.chatgpt_model = chatgpt_model
@@ -53,7 +54,7 @@ info4.pdf: In-network institutions include Overlake, Swedish and others in the r
 
         # If retrieval mode includes vectors, compute an embedding for the query
         if has_vector:
-            query_vector = openai.Embedding.create(engine=self.embedding_deployment, input=q)["data"][0]["embedding"]
+            query_vector = self.aoai_client.Embedding.create(engine=self.embedding_deployment, input=q)["data"][0]["embedding"]
         else:
             query_vector = None
 
@@ -97,8 +98,7 @@ info4.pdf: In-network institutions include Overlake, Swedish and others in the r
         message_builder.append_message('user', self.question)
         
         messages = message_builder.messages
-        chat_completion = openai.ChatCompletion.create(
-            deployment_id=self.openai_deployment,
+        chat_completion = self.aoai_client.chat.completions.create(
             model=self.chatgpt_model,
             messages=messages, 
             temperature=overrides.get("temperature") or 0.3, 

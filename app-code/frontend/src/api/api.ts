@@ -20,7 +20,6 @@ export async function callSummary(options: SummaryOpts): Promise<AOAIResult> {
         }),
     });
     const json = await response.json();
-
     var retVal: AOAIResult = {
         created: json.created,
         id: json.id,
@@ -33,12 +32,14 @@ export async function callSummary(options: SummaryOpts): Promise<AOAIResult> {
         },
         choices: new Array<aoaiChoices>()
     };
+    console.log(json);
     json.choices.forEach((choice: any) => {
+        console.log(choice);
         retVal.choices.push({
             finish_reason: choice.finish_reason,
             index: choice.index,
             logprobs: choice.logprobs,
-            text: choice.text
+            text: choice.message.content
         });
     });
 
@@ -82,7 +83,7 @@ export async function callOpenCompareBox(options: OpenBoxCompareOpts): Promise<A
             finish_reason: choice.finish_reason,
             index: choice.index,
             logprobs: choice.logprobs,
-            text: choice.text
+            text: choice.message.content
         });
     });
 
@@ -136,7 +137,7 @@ export async function callOpenBox(options: OpenBoxOpts): Promise<AOAIResult> {
             finish_reason: choice.finish_reason,
             index: choice.index,
             logprobs: choice.logprobs,
-            text: choice.text
+            text: choice.message.content
         });
     });
 
@@ -180,7 +181,7 @@ export async function calljdSeachTerms(options: SearchTermOpts): Promise<AOAIRes
             finish_reason: choice.finish_reason,
             index: choice.index,
             logprobs: choice.logprobs,
-            text: choice.text,
+            text: choice.message.content,
             message: { role: choice.message.role, content: choice.message.content }
         });
     });
@@ -226,7 +227,7 @@ export async function callResumeJD(options: resumeJDCompareReq): Promise<AOAIRes
             finish_reason: choice.finish_reason,
             index: choice.index,
             logprobs: choice.logprobs,
-            text: choice.text,
+            text: choice.message.content,
             message: { role: choice.message.role, content: choice.message.content }
         });
     });

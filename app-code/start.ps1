@@ -54,7 +54,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host ""
 Write-Host "Building frontend"
 Write-Host ""
-#npm run build
+npm run build
 #if ($LASTEXITCODE -ne 0) {
 #    Write-Host "Failed to build frontend"
 #    exit $LASTEXITCODE
@@ -64,8 +64,8 @@ Write-Host ""
 Write-Host ""
 Write-Host "Starting frontend"
 Write-Host ""
-Start-Process npm -ArgumentList "run dev"
-Start-Process http://localhost:5173/
+#Start-Process npm -ArgumentList "run dev"
+#Start-Process http://localhost:5173/
 
 Set-Location ../backend
 Start-Process -FilePath $venvPythonPath -ArgumentList "-m flask run --port=5000 --reload --debug" -Wait -NoNewWindow

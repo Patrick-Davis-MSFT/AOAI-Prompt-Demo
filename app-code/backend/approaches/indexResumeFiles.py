@@ -1,6 +1,6 @@
 import os
 import io
-import openai
+from openai import AzureOpenAI
 import time
 import queue
 import base64
@@ -33,7 +33,23 @@ from pypdf import PdfReader, PdfWriter
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 class indexResumeFiles():
-    def __init__(self, storageAcct:str, stagingContainer: str, indexContainer: str, indexFullContainer: str, formAnalyzer: str,formAnalyzerKey: str, cognitiveSearch: str, cognitiveSearchIndex: str, embDeployment: str, aoaiService: str):
+    def token_provider(self, scopes=None):
+        return self.defaultCreds.get_token("https://cognitiveservices.azure.com/.default").token
+    def __init__(self, 
+                 defaultCreds, 
+                 aoai_endpoint, 
+                 storageAcct:str, 
+                 stagingContainer: str, 
+                 indexContainer: str, 
+                 indexFullContainer: str, 
+                 formAnalyzer: str,
+                 formAnalyzerKey: str, 
+                 cognitiveSearch: str, 
+                 cognitiveSearchIndex: str, 
+                 embDeployment: str, 
+                 aoaiService: str):
+        self.defaultCreds = defaultCreds
+        self.aoai_endpoint = aoai_endpoint
         self.storageAcct = storageAcct
         self.stagingContainer = stagingContainer
         self.indexContainer = indexContainer
@@ -57,6 +73,9 @@ class indexResumeFiles():
         
     def run(self, openAIAuth, azure_credential, printAPI: queue.Queue): 
         self.printAPI = printAPI
+        self.aoai_client = AzureOpenAI(azure_endpoint=self.aoai_endpoint, 
+                        azure_ad_token_provider=self.token_provider, 
+                        api_version="2023-12-01-preview")
         print("run indexResumeFiles")
         printAPI.put("Processing Files...")
         blob_service_client = BlobServiceClient(account_url=f"https://" + self.storageAcct + ".blob.core.windows.net", credential=azure_credential)
@@ -65,8 +84,8 @@ class indexResumeFiles():
         upload_full_client = blob_service_client.get_container_client(self.indexFullContainer)
 
         self.printAPI.put("Generating Search Keys..." )
-        openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-        openai.api_type = "azure_ad"
+        #openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
+        #openai.api_type = "azure_ad"
 
         self.open_ai_token_cache[self.CACHE_KEY_CREATED_TIME] = time.time()
         self.open_ai_token_cache[self.CACHE_KEY_TOKEN_CRED] = azure_credential
@@ -91,6 +110,7 @@ class indexResumeFiles():
             page_map = self.get_document_text(file.name, blob_service_client, container_client)
             use_vectors = True
             sections = self.create_sections(file.name, page_map, use_vectors)
+            print(sections)
             self.index_sections(file.name, sections, azure_credential)
             #Remove File after indexing
             container_client.delete_blob(file.name)
@@ -259,12 +279,13 @@ class indexResumeFiles():
             }
             if use_vectors:
                 section["embedding"] = self.compute_embedding(content)
+                print(section["embedding"])
             yield section
     
     def refresh_openai_token(self):
         if self.open_ai_token_cache[self.CACHE_KEY_TOKEN_TYPE] == 'azure_ad' and self.open_ai_token_cache[self.CACHE_KEY_CREATED_TIME] + 300 < time.time():
             token_cred = self.open_ai_token_cache[self.CACHE_KEY_TOKEN_CRED]
-            openai.api_key = token_cred.get_token("https://cognitiveservices.azure.com/.default").token
+            #openai.api_key = token_cred.get_token("https://cognitiveservices.azure.com/.default").token
             self.open_ai_token_cache[self.CACHE_KEY_CREATED_TIME] = time.time()
 
     def before_retry_sleep(retry_state):
@@ -275,7 +296,9 @@ class indexResumeFiles():
         self.refresh_openai_token()
         print(f"Computing embedding for text of length {len(text)}")
         self.printAPI.put(f"Computing embedding for text of length {len(text)}, This will sleep where needed.")
-        return openai.Embedding.create(engine=self.embDeployment, input=text)["data"][0]["embedding"]
+        retVal = self.aoai_client.embeddings.create(model=self.embDeployment, input=text)
+        #print(retVal)
+        return retVal.data[0].embedding
 
     def get_document_text(self, filename: str, blob_service_client: BlobServiceClient, container_client: BlobServiceClient) -> dict:
         offset = 0

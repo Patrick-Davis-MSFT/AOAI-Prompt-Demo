@@ -5,7 +5,7 @@ import time
 import threading
 import queue
 import logging
-import openai
+from openai import AzureOpenAI
 import sys
 from flask import Flask, request, jsonify, send_file, abort, Response
 from azure.identity import DefaultAzureCredential
@@ -31,14 +31,15 @@ AZURE_OPENAI_SERVICE = os.environ.get("AZURE_OPENAI_SERVICE") or "myopenai"
 AZURE_OPENAI_GPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_GPT_DEPLOYMENT") or "davinci"
 AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHATGPT_DEPLOYMENT") or "chat"
 AZURE_OPENAI_LARGEGPT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_LARGEGPT_DEPLOYMENT") or "chat16k"
-AZURE_OPENAI_LARGEGPT_MODEL = os.environ.get("AZURE_OPENAI_LARGEGPT_MODEL") or "chat16k"
-AZURE_OPENAI_CHATGPT_MODEL = os.environ.get("AZURE_OPENAI_CHATGPT_MODEL") or "gpt-35-turbo"
+AZURE_OPENAI_LARGEGPT_MODEL = os.environ.get("AZURE_OPENAI_LARGEGPT_MODEL", "gpt-4") 
+AZURE_OPENAI_CHATGPT_MODEL = os.environ.get("AZURE_OPENAI_CHATGPT_MODEL", "gpt-4")
 AZURE_OPENAI_EMB_DEPLOYMENT = os.environ.get("AZURE_OPENAI_EMB_DEPLOYMENT") or "embedding"
 AZURE_STG_RESUME_CONTAINER = os.environ.get("AZURE_STG_RESUME_CONTAINER") or "stage-resumes"
 AZURE_IDX_RESUME_CONTAINER = os.environ.get("AZURE_IDX_RESUME_CONTAINER") or "indexed-resumes"
 AZURE_IDX_RESUME_FULL_CONTAINER = os.environ.get("AZURE_IDX_RESUME_FULL_CONTAINER") or "indexed-resumes-full"
 AZURE_FORMRECOGNIZER_SERVICE = os.environ.get("AZURE_FORMRECOGNIZER_SERVICE") or "myformrecognizer"
 AZURE_FORMRECOGNIZER_KEY = os.environ.get("AZURE_FORMRECOGNIZER_KEY") or "myformrecognizerkey"
+AZURE_OPENAI_API_VERSION = os.environ.get("AZURE_OPENAI_API_VERSION","2024-06-01")
 
 KB_FIELDS_CONTENT = os.environ.get("KB_FIELDS_CONTENT") or "content"
 KB_FIELDS_CATEGORY = os.environ.get("KB_FIELDS_CATEGORY") or "category"
@@ -51,19 +52,19 @@ KB_FIELDS_SOURCEPAGE = os.environ.get("KB_FIELDS_SOURCEPAGE") or "sourcepage"
 azure_credential = DefaultAzureCredential(exclude_shared_token_cache_credential = True)
 
 # Used by the OpenAI SDK
-openai.api_type = "azure"
-openai.api_base = f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com"
-openai.api_version = "2023-05-15"
+oai_endpoint = f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com"
 
 ##Added APIM Endpoint if set 
 AZURE_APIM_OPENAI_URL = os.environ.get("AZURE_APIM_OPENAI_URL", "")
 if AZURE_APIM_OPENAI_URL != "":
-    openai.api_base = AZURE_APIM_OPENAI_URL
+    oai_endpoint = AZURE_APIM_OPENAI_URL
 
 # Comment these two lines out if using keys, set your API key in the OPENAI_API_KEY environment variable instead
-openai.api_type = "azure_ad"
+def token_provider(self, scopes=None):
+        return self.defaultCreds.get_token("https://cognitiveservices.azure.com/.default").token
 openai_token = azure_credential.get_token("https://cognitiveservices.azure.com/.default")
-openai.api_key = openai_token.token
+
+oai_client = AzureOpenAI(azure_ad_token_provider= token_provider, api_version =AZURE_OPENAI_API_VERSION,azure_endpoint = oai_endpoint)
 
 # Set up clients for Cognitive Search and Storage
 search_client = SearchClient(
@@ -79,13 +80,13 @@ blob_full_container = blob_client.get_container_client(AZURE_IDX_RESUME_FULL_CON
 # Various approaches to integrate GPT and external knowledge, most applications will use a single one of these patterns
 # or some derivative, here we include several for exploration purposes
 ask_approaches = {
-    "rtr": RetrieveThenReadApproach(search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, AZURE_OPENAI_EMB_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
-    "rrr": ReadRetrieveReadApproach(search_client, AZURE_OPENAI_GPT_DEPLOYMENT, AZURE_OPENAI_EMB_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
-    "rda": ReadDecomposeAsk(search_client, AZURE_OPENAI_GPT_DEPLOYMENT, AZURE_OPENAI_EMB_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
+    "rtr": RetrieveThenReadApproach(oai_client, search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, AZURE_OPENAI_EMB_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
+    "rrr": ReadRetrieveReadApproach(oai_client, search_client, AZURE_OPENAI_GPT_DEPLOYMENT, AZURE_OPENAI_EMB_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
+    "rda": ReadDecomposeAsk(oai_client, search_client, AZURE_OPENAI_GPT_DEPLOYMENT, AZURE_OPENAI_EMB_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
 }
 
 chat_approaches = {
-    "rrr": ChatReadRetrieveReadApproach(search_client, 
+    "rrr": ChatReadRetrieveReadApproach(oai_client, search_client, 
                                         AZURE_OPENAI_CHATGPT_DEPLOYMENT,
                                         AZURE_OPENAI_CHATGPT_MODEL, 
                                         AZURE_OPENAI_EMB_DEPLOYMENT,
@@ -94,19 +95,21 @@ chat_approaches = {
 }
 
 summarize_full_text_approaches = {
-    "sft": summaryFullText(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+    "sft": summaryFullText(azure_credential, oai_endpoint, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
 openbox_full_text_approaches = {
-    "obt": openBoxFullText(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, AZURE_OPENAI_LARGEGPT_MODEL, AZURE_OPENAI_LARGEGPT_DEPLOYMENT)
+    "obt": openBoxFullText(azure_credential, oai_endpoint, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, AZURE_OPENAI_LARGEGPT_MODEL, AZURE_OPENAI_LARGEGPT_DEPLOYMENT)
 }
 
 text_compare_approaches = {
-    "ctb": textCompare(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+    "ctb": textCompare(azure_credential, oai_endpoint, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
 indexResumeFiles_approaches = {
-    "irf": indexResumeFiles(AZURE_STORAGE_ACCOUNT,
+    "irf": indexResumeFiles(azure_credential, 
+                            oai_endpoint,
+                            AZURE_STORAGE_ACCOUNT,
                             AZURE_STG_RESUME_CONTAINER, 
                             AZURE_IDX_RESUME_CONTAINER,
                             AZURE_IDX_RESUME_FULL_CONTAINER, 
@@ -269,7 +272,9 @@ def summaryApi():
     frequency_penalty=request.json["frequency_penalty"]
     presence_penalty=request.json["presence_penalty"]
     r = impl.run(prompt, fullText, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
-    return jsonify(r), 200
+    r_dumps = r.model_dump()
+    print(r)
+    return jsonify(r_dumps), 200
 
 
 @app.route("/openbox", methods=["POST"])
@@ -289,7 +294,8 @@ def openboxApi():
     r = impl.run(prompt, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
     sys.stdout.write("openboxApi: " + str(r))
     sys.stdout.flush()
-    return jsonify(r), 200
+    r_dumps = r.model_dump()
+    return jsonify(r_dumps), 200
 
 @app.route("/openboxcompare", methods=["POST"])
 def textCompareApi():
@@ -311,7 +317,8 @@ def textCompareApi():
     r = impl.run(promptBox2,box1,box3, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
     sys.stdout.write("openboxApi: " + str(r))
     sys.stdout.flush()
-    return jsonify(r), 200
+    r_dumps = r.model_dump()
+    return jsonify(r_dumps), 200
 
 @app.route("/cleardata", methods=["POST"])
 def clearData():
@@ -394,7 +401,8 @@ def jobDescSkillsApi():
     r = impl.runLarge(prompt,usrMessage, temperature, top_p, frequency_penalty, presence_penalty, maxTokens)
     sys.stdout.write("jobDescSkillsApi: " + str(r))
     sys.stdout.flush()
-    return jsonify(r), 200
+    r_dict = r.model_dump()
+    return jsonify(r_dict), 200
 
 @app.route("/resumeJDCompare", methods=["POST"])
 def resumeJDCompare():
@@ -424,7 +432,8 @@ def resumeJDCompare():
     r.source = f'/content/{resumeName}'
     sys.stdout.write("resumeJDCompare: \n" + str(r))
     sys.stdout.flush()
-    return jsonify(r), 200
+    r_dict = r.model_dump()
+    return jsonify(r_dict), 200
 
 @app.route("/searchDocs", methods=["POST"])
 def searchDocsWCog():

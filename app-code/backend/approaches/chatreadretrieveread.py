@@ -1,6 +1,6 @@
 from typing import Any, Sequence
 import os
-import openai
+from openai import AzureOpenAI
 import tiktoken
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
@@ -47,7 +47,8 @@ If you cannot generate a search query, return just the number 0.
         {'role' : ASSISTANT, 'content' : 'Health plan cardio coverage' }
     ]
 
-    def __init__(self, search_client: SearchClient, chatgpt_deployment: str, chatgpt_model: str, embedding_deployment: str, sourcepage_field: str, content_field: str):
+    def __init__(self, aoai_client, search_client: SearchClient, chatgpt_deployment: str, chatgpt_model: str, embedding_deployment: str, sourcepage_field: str, content_field: str):
+        self.aoai_client = aoai_client
         self.search_client = search_client
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
@@ -76,7 +77,7 @@ If you cannot generate a search query, return just the number 0.
             self.chatgpt_token_limit - len(user_q)
             )
 
-        chat_completion = openai.ChatCompletion.create(
+        chat_completion = self.aoai_client.client.chat.completions.create(
             deployment_id=self.chatgpt_deployment,
             model=self.chatgpt_model,
             messages=messages, 
@@ -92,7 +93,7 @@ If you cannot generate a search query, return just the number 0.
 
         # If retrieval mode includes vectors, compute an embedding for the query
         if has_vector:
-            query_vector = openai.Embedding.create(engine=self.embedding_deployment, input=query_text)["data"][0]["embedding"]
+            query_vector = self.aoai_client.Embedding.create(engine=self.embedding_deployment, input=query_text)["data"][0]["embedding"]
         else:
             query_vector = None
 
@@ -146,8 +147,7 @@ If you cannot generate a search query, return just the number 0.
             history[-1]["user"],
             max_tokens=self.chatgpt_token_limit)
 
-        chat_completion = openai.ChatCompletion.create(
-            deployment_id=self.chatgpt_deployment,
+        chat_completion = self.aoai_client.chat.completions.create(
             model=self.chatgpt_model,
             messages=messages, 
             temperature=overrides.get("temperature") or 0.7, 

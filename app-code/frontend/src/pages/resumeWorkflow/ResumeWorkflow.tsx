@@ -22,20 +22,20 @@ export function Component(): JSX.Element {
     //section for White Boxing Text 
     var openBoxTitle: string = "Resume Workflow";
     var obPromptlbl: string = "Open Box Prompt";
-    var searchTermPromptTXT: string = "### The User is sending a Job Description formatted with Markdown. Find the top five skills and search terms that an applicant would need to perform the job successfully according to the job description provided. \n " +
-        " Respond first with a JavaScript Array of Objects. Only use information noted in the job description and no where else. \n " +
-        " Order the skills from most important to least important. \n\n" +
-        ' Format your answers in a javascript string array of objects in the structure {"skill": "value", "term": "value" } where as the skill ' +
-        'is the skill from the document and the term is 4 or more generated search keywords in a single string. The result should be returned such as \n' +
-        '```\n const topSkills = [{"skill": "value", "term": "value" },  \n ' +
-        '{"skill": "value", "term": "value" }, \n ' +
-        '{"skill": "value", "term": "value" }, \n ' +
-        '{"skill": "value", "term": "value" }, \n ' +
-        '{"skill": "value", "term": "value" }] \n``` \n\n ' +
-        "Replace value with the skill or the search term. \n " +
-        "Do not include any other information. \n " +
-        "If there are less than five skills that are important return an array of only those skills. \n " +
-        "If there are no skills that are important return an empty array. ###";
+    var searchTermPromptTXT: string = "The User is sending a Job Description formatted with Markdown. Find the top five skills and search terms that an applicant would need to perform the job successfully according to the job description provided. \n" +
+            "Respond first with a JavaScript Array of Objects. Only use information noted in the job description and no where else.  \n" +
+            "Order the skills from most important to least important.  \n\n" +
+            "Format your answers in a javascript string array of objects in the structure {\"skill\": \"value\", \"term\": \"value\" } where as the skill is the skill from the document and the term is 4 or more generated search keywords in a single string. The result should be returned as below. Include only runnable code. \n\n" +
+            "const topSkills = [{\"skill\": \"value\", \"term\": \"value\" },   \n" +
+            "{\"skill\": \"value\", \"term\": \"value\" },  \n" +
+            "{\"skill\": \"value\", \"term\": \"value\" },  \n" +
+            "{\"skill\": \"value\", \"term\": \"value\" },  \n" +
+            "{\"skill\": \"value\", \"term\": \"value\" }]  \n\n" +
+            "Replace value with the skill or the search term.  \n" +
+            "Do not include any other information.  \n" +
+            "If there are less than five skills that are important return an array of only those skills.  \n" +
+            "If there are no skills that are important return an empty array. \n" +
+            "Do not include ```javascript or the ``` tags.";
     var resumeCompareJDPromptTXT: string = ' ### Provided below is a Job Description formatted with Markdown. ' + 
     'The User is sending a resume in plain text.  \n' +
     'Start the response with the name and contact email supplied in the resume in the format below, ' +

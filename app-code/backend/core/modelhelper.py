@@ -6,7 +6,8 @@ MODELS_2_TOKEN_LIMITS = {
     "gpt-35-turbo-16k": 16000,
     "gpt-3.5-turbo-16k": 16000,
     "gpt-4": 8100,
-    "gpt-4-32k": 32000
+    "gpt-4-32k": 32000,
+    "gpt-4o": 120000
 }
 
 AOAI_2_OAI = {

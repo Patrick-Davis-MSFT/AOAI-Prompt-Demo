@@ -24,12 +24,23 @@ export type aoaiChoices = {
     index: number,
     logprobs: null,
     text: string,
-    message?: message
+    message?: message,
+    choices?: choice[]
+}
+
+export type choice = {
+    finish_reason: string,
+    index: number,
+    logprobs: null,
+    text: string,
+    message?: message,
 }
 
 export type message = {
     role: string,
-    content: string
+    content: string,
+    function_call?: string,
+    tool_calls?: string,
 }
 export type usage = {
     completion_tokens: number,

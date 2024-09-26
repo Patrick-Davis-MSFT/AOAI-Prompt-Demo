@@ -1,4 +1,4 @@
-import openai
+from openai import AzureOpenAI
 from approaches.approach import Approach
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
@@ -44,7 +44,8 @@ Thought: {agent_scratchpad}"""
 
     CognitiveSearchToolDescription = "useful for searching the Microsoft employee benefits information such as healthcare plans, retirement plans, etc."
 
-    def __init__(self, search_client: SearchClient, openai_deployment: str, embedding_deployment: str, sourcepage_field: str, content_field: str):
+    def __init__(self, aoai_client, search_client: SearchClient, openai_deployment: str, embedding_deployment: str, sourcepage_field: str, content_field: str):
+        self.aoai_client = aoai_client
         self.search_client = search_client
         self.openai_deployment = openai_deployment
         self.embedding_deployment = embedding_deployment
@@ -61,7 +62,7 @@ Thought: {agent_scratchpad}"""
 
         # If retrieval mode includes vectors, compute an embedding for the query
         if has_vector:
-            query_vector = openai.Embedding.create(engine=self.embedding_deployment, input=query_text)["data"][0]["embedding"]
+            query_vector = self.aoai_client.Embedding.create(engine=self.embedding_deployment, input=query_text)["data"][0]["embedding"]
         else:
             query_vector = None
 

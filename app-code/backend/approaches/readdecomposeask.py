@@ -13,7 +13,8 @@ from text import nonewlines
 from typing import Any, List, Optional
 
 class ReadDecomposeAsk(Approach):
-    def __init__(self, search_client: SearchClient, openai_deployment: str, embedding_deployment: str, sourcepage_field: str, content_field: str):
+    def __init__(self, aoai_client, search_client: SearchClient, openai_deployment: str, embedding_deployment: str, sourcepage_field: str, content_field: str):
+        self.aoai_client = aoai_client
         self.search_client = search_client
         self.openai_deployment = openai_deployment
         self.embedding_deployment = embedding_deployment

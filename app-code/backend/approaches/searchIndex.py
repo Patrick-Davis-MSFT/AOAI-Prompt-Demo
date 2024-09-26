@@ -1,6 +1,5 @@
 from typing import Any, Sequence
 import os
-import openai
 import tiktoken
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
