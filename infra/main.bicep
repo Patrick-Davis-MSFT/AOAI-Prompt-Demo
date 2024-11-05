@@ -177,6 +177,7 @@ module backend 'components/host/appservice.bicep' = {
       AZURE_OPENAI_GPT_DEPLOYMENT: gptDeploymentName
       AZURE_OPENAI_CHATGPT_DEPLOYMENT: chatGptDeploymentName
       AZURE_OPENAI_LARGEGPT_DEPLOYMENT: largeGptDeploymentName
+      AZURE_OPENAI_CHATGPT_MODEL: largeGptDeploymentName
       AZURE_OPENAI_EMB_DEPLOYMENT: embeddingDeploymentName
       AZURE_OPENAI_LARGEGPT_MODEL: largegptModelName
       AZURE_IDX_RESUME_FULL_CONTAINER: storageIdxResumeFullContainerName
